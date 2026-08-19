@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { generateReading } from './MeterSimulator';
+import { getForecast } from './Forecast';
 
 function App() {
   const [view, setView] = useState('prosumer');
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
   const [liveReading, setLiveReading] = useState(null);
+  const [forecast, setForecast] = useState(null);
 
   const prosumerData = {
     trustScore: 85,
@@ -20,6 +22,10 @@ function App() {
       setLiveReading(generateReading());
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    setForecast(getForecast());
   }, []);
 
   const connectWallet = async () => {
@@ -72,6 +78,17 @@ function App() {
               <p>
                 Voltage: {liveReading.voltage}V |{' '}
                 {new Date(liveReading.timestamp).toLocaleTimeString()}
+              </p>
+            </div>
+          )}
+
+          {forecast && (
+            <div style={{ ...styles.card, backgroundColor: '#e3f2fd', marginBottom: '20px' }}>
+              <h3>🤖 AI Forecast — Tomorrow</h3>
+              <p style={styles.bigNumber}>{forecast.totalDailyForecast} kWh</p>
+              <p>
+                Predicted peak: {forecast.predictedPeakGeneration} kWh at{' '}
+                {forecast.predictedPeakTime} | Confidence: {forecast.confidence}%
               </p>
             </div>
           )}
