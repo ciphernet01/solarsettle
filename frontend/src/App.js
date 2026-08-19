@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+import { generateReading } from './MeterSimulator';
 
 function App() {
   const [view, setView] = useState('prosumer');
   const [walletConnected, setWalletConnected] = useState(false);
   const [walletAddress, setWalletAddress] = useState('');
+  const [liveReading, setLiveReading] = useState(null);
 
-  // Mock data for now — hum baad mein blockchain se connect karenge
   const prosumerData = {
     trustScore: 85,
     totalGenerated: 342,
     carbonCredits: 342,
     todayGeneration: 15.2,
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveReading(generateReading());
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const connectWallet = async () => {
     if (window.ethereum) {
@@ -56,6 +64,18 @@ function App() {
       {view === 'prosumer' ? (
         <div style={styles.dashboard}>
           <h2>Prosumer Dashboard</h2>
+
+          {liveReading && (
+            <div style={{ ...styles.card, backgroundColor: '#e8f5e9', marginBottom: '20px' }}>
+              <h3>🔴 Live Meter Reading</h3>
+              <p style={styles.bigNumber}>{liveReading.kWh} kWh</p>
+              <p>
+                Voltage: {liveReading.voltage}V |{' '}
+                {new Date(liveReading.timestamp).toLocaleTimeString()}
+              </p>
+            </div>
+          )}
+
           <div style={styles.cardGrid}>
             <div style={styles.card}>
               <h3>Trust Score</h3>
