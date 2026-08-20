@@ -10,6 +10,15 @@ function App() {
   const [liveReading, setLiveReading] = useState(null);
   const [forecast, setForecast] = useState(null);
 
+  const [listKwh, setListKwh] = useState('');
+  const [listPrice, setListPrice] = useState('');
+  const [listings, setListings] = useState([
+    { id: 1, seller: 'Ramesh Kumar', location: 'Bhopal, MP', kWh: 10, price: 6, trustScore: 88 },
+    { id: 2, seller: 'Priya Sharma', location: 'Jabalpur, MP', kWh: 7, price: 5.5, trustScore: 95 },
+    { id: 3, seller: 'Meena Joshi', location: 'Sagar, MP', kWh: 12, price: 6.2, trustScore: 85 },
+  ]);
+  const [purchaseMsg, setPurchaseMsg] = useState('');
+
   const prosumerData = {
     trustScore: 85,
     totalGenerated: 342,
@@ -57,6 +66,32 @@ function App() {
     }
   };
 
+  const handleListEnergy = (e) => {
+    e.preventDefault();
+    if (!listKwh || !listPrice) return;
+
+    const newListing = {
+      id: listings.length + 1,
+      seller: 'You (Ramesh Kumar)',
+      location: 'Bhopal, MP',
+      kWh: parseFloat(listKwh),
+      price: parseFloat(listPrice),
+      trustScore: prosumerData.trustScore,
+    };
+
+    setListings([...listings, newListing]);
+    setListKwh('');
+    setListPrice('');
+  };
+
+  const handleBuy = (listing) => {
+    setListings(listings.filter((l) => l.id !== listing.id));
+    setPurchaseMsg(
+      `✅ Purchased ${listing.kWh} kWh from ${listing.seller} for ₹${(listing.kWh * listing.price).toFixed(2)}. Payment auto-settled via smart contract.`
+    );
+    setTimeout(() => setPurchaseMsg(''), 5000);
+  };
+
   return (
     <div className="App">
       <header style={styles.header}>
@@ -64,6 +99,9 @@ function App() {
         <div>
           <button style={styles.navBtn} onClick={() => setView('prosumer')}>
             Prosumer Dashboard
+          </button>
+          <button style={styles.navBtn} onClick={() => setView('marketplace')}>
+            Marketplace
           </button>
           <button style={styles.navBtn} onClick={() => setView('government')}>
             Government Dashboard
@@ -80,7 +118,7 @@ function App() {
         </div>
       </header>
 
-      {view === 'prosumer' ? (
+      {view === 'prosumer' && (
         <div style={styles.dashboard}>
           <h2>Prosumer Dashboard</h2>
 
@@ -124,8 +162,68 @@ function App() {
               <p style={styles.bigNumber}>{prosumerData.todayGeneration} kWh</p>
             </div>
           </div>
+
+          <div style={{ ...styles.card, marginTop: '30px', textAlign: 'left' }}>
+            <h3>💡 List Your Excess Energy</h3>
+            <form onSubmit={handleListEnergy} style={styles.form}>
+              <input
+                type="number"
+                step="0.1"
+                placeholder="kWh to sell"
+                value={listKwh}
+                onChange={(e) => setListKwh(e.target.value)}
+                style={styles.input}
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Price per unit (₹)"
+                value={listPrice}
+                onChange={(e) => setListPrice(e.target.value)}
+                style={styles.input}
+              />
+              <button type="submit" style={styles.connectBtn}>
+                List on Marketplace
+              </button>
+            </form>
+          </div>
         </div>
-      ) : (
+      )}
+
+      {view === 'marketplace' && (
+        <div style={styles.dashboard}>
+          <h2>⚡ Energy Marketplace</h2>
+          <p style={{ color: '#666' }}>Buy excess solar energy directly from local prosumers — instantly settled via smart contract.</p>
+
+          {purchaseMsg && (
+            <div style={{ ...styles.card, backgroundColor: '#e8f5e9', marginBottom: '20px', textAlign: 'left' }}>
+              {purchaseMsg}
+            </div>
+          )}
+
+          <div style={styles.panelGrid}>
+            {listings.length === 0 && <p>No active listings right now.</p>}
+            {listings.map((l) => (
+              <div key={l.id} style={styles.panelCard}>
+                <div style={styles.panelHeader}>
+                  <strong>{l.seller}</strong>
+                  <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Trust: {l.trustScore}/100</span>
+                </div>
+                <p style={{ margin: '4px 0', color: '#666' }}>📍 {l.location}</p>
+                <p style={{ margin: '4px 0' }}>
+                  <strong>{l.kWh} kWh</strong> available
+                </p>
+                <p style={{ margin: '4px 0' }}>₹{l.price}/unit — Total: ₹{(l.kWh * l.price).toFixed(2)}</p>
+                <button style={{ ...styles.connectBtn, width: '100%', marginTop: '10px' }} onClick={() => handleBuy(l)}>
+                  Buy Now
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {view === 'government' && (
         <div style={styles.dashboard}>
           <h2>Government Dashboard</h2>
 
@@ -264,12 +362,26 @@ const styles = {
     padding: '16px',
     borderRadius: '8px',
     boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    textAlign: 'left',
   },
   panelHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '8px',
+  },
+  form: {
+    display: 'flex',
+    gap: '10px',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  input: {
+    padding: '10px',
+    borderRadius: '6px',
+    border: '1px solid #ccc',
+    flex: '1',
+    minWidth: '150px',
   },
 };
 
