@@ -19,8 +19,12 @@
   },
   "homepage": "https://github.com/rajveersah/solarsettle#readme",
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.7",
     "@types/node": "^22.20.1",
     "hardhat": "^3.13.0",
     "typescript": "~6.0.3"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2"
   }
 }
