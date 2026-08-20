@@ -17,6 +17,19 @@ function App() {
     todayGeneration: 15.2,
   };
 
+  const panels = [
+    { id: 'MP-001', owner: 'Ramesh Kumar', location: 'Bhopal, MP', kWhToday: 18.4, status: 'active', trustScore: 88 },
+    { id: 'MP-002', owner: 'Sunita Verma', location: 'Indore, MP', kWhToday: 15.1, status: 'active', trustScore: 92 },
+    { id: 'MP-003', owner: 'Anil Patel', location: 'Gwalior, MP', kWhToday: 0, status: 'fraud_alert', trustScore: 12 },
+    { id: 'MP-004', owner: 'Priya Sharma', location: 'Jabalpur, MP', kWhToday: 19.7, status: 'active', trustScore: 95 },
+    { id: 'MP-005', owner: 'Vikram Singh', location: 'Ujjain, MP', kWhToday: 14.3, status: 'active', trustScore: 79 },
+    { id: 'MP-006', owner: 'Meena Joshi', location: 'Sagar, MP', kWhToday: 16.8, status: 'active', trustScore: 85 },
+  ];
+
+  const fraudAlerts = panels.filter((p) => p.status === 'fraud_alert');
+  const totalGenerationToday = panels.reduce((sum, p) => sum + p.kWhToday, 0).toFixed(1);
+  const avgTrustScore = (panels.reduce((sum, p) => sum + p.trustScore, 0) / panels.length).toFixed(0);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setLiveReading(generateReading());
@@ -115,19 +128,61 @@ function App() {
       ) : (
         <div style={styles.dashboard}>
           <h2>Government Dashboard</h2>
+
           <div style={styles.cardGrid}>
             <div style={styles.card}>
               <h3>Total Panels Monitored</h3>
-              <p style={styles.bigNumber}>50</p>
+              <p style={styles.bigNumber}>{panels.length}</p>
             </div>
             <div style={styles.card}>
               <h3>Today's Total Generation</h3>
-              <p style={styles.bigNumber}>750 kWh</p>
+              <p style={styles.bigNumber}>{totalGenerationToday} kWh</p>
             </div>
             <div style={styles.card}>
-              <h3>Fraud Alerts</h3>
-              <p style={styles.bigNumber}>1</p>
+              <h3>Avg Trust Score</h3>
+              <p style={styles.bigNumber}>{avgTrustScore}/100</p>
             </div>
+            <div style={{ ...styles.card, backgroundColor: fraudAlerts.length > 0 ? '#ffebee' : '#f4f4f4' }}>
+              <h3>Fraud Alerts</h3>
+              <p style={{ ...styles.bigNumber, color: fraudAlerts.length > 0 ? '#c62828' : '#1a1a2e' }}>
+                {fraudAlerts.length}
+              </p>
+            </div>
+          </div>
+
+          {fraudAlerts.length > 0 && (
+            <div style={styles.fraudBanner}>
+              <h3 style={{ margin: '0 0 10px 0' }}>⚠️ Fraud Alerts — Immediate Attention Needed</h3>
+              {fraudAlerts.map((p) => (
+                <p key={p.id} style={{ margin: '4px 0' }}>
+                  Panel <strong>{p.id}</strong> ({p.owner}, {p.location}) — <strong>0 kWh generated</strong> for 10+ days. Trust score dropped to {p.trustScore}/100.
+                </p>
+              ))}
+            </div>
+          )}
+
+          <h3 style={{ marginTop: '30px' }}>📍 Subsidized Panels — Location Overview</h3>
+          <div style={styles.panelGrid}>
+            {panels.map((p) => (
+              <div
+                key={p.id}
+                style={{
+                  ...styles.panelCard,
+                  borderLeft: p.status === 'fraud_alert' ? '5px solid #c62828' : '5px solid #4caf50',
+                }}
+              >
+                <div style={styles.panelHeader}>
+                  <strong>{p.id}</strong>
+                  <span style={{ color: p.status === 'fraud_alert' ? '#c62828' : '#4caf50', fontWeight: 'bold' }}>
+                    {p.status === 'fraud_alert' ? '⚠️ Alert' : '● Active'}
+                  </span>
+                </div>
+                <p style={{ margin: '4px 0' }}>{p.owner}</p>
+                <p style={{ margin: '4px 0', color: '#666' }}>📍 {p.location}</p>
+                <p style={{ margin: '4px 0' }}>Today: <strong>{p.kWhToday} kWh</strong></p>
+                <p style={{ margin: '4px 0' }}>Trust Score: <strong>{p.trustScore}/100</strong></p>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -190,6 +245,31 @@ const styles = {
     fontSize: '32px',
     fontWeight: 'bold',
     color: '#1a1a2e',
+  },
+  fraudBanner: {
+    backgroundColor: '#fff3e0',
+    border: '2px solid #f57c00',
+    borderRadius: '10px',
+    padding: '16px 20px',
+    marginTop: '20px',
+  },
+  panelGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '16px',
+    marginTop: '16px',
+  },
+  panelCard: {
+    backgroundColor: '#fafafa',
+    padding: '16px',
+    borderRadius: '8px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  },
+  panelHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
   },
 };
 
