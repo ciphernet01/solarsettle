@@ -94,85 +94,100 @@ function App() {
 
   return (
     <div className="App">
-      <header style={styles.header}>
-        <h1 style={styles.title}>☀️ SolarSettle</h1>
-        <div>
-          <button style={styles.navBtn} onClick={() => setView('prosumer')}>
-            Prosumer Dashboard
+      <header className="header">
+        <h1 className="brand">
+          <span className="brand-icon">☀️</span>
+          <span className="brand-text">SolarSettle</span>
+        </h1>
+        <nav className="nav">
+          <button className={`nav-btn ${view === 'prosumer' ? 'active' : ''}`} onClick={() => setView('prosumer')}>
+            Prosumer
           </button>
-          <button style={styles.navBtn} onClick={() => setView('marketplace')}>
+          <button className={`nav-btn ${view === 'marketplace' ? 'active' : ''}`} onClick={() => setView('marketplace')}>
             Marketplace
           </button>
-          <button style={styles.navBtn} onClick={() => setView('government')}>
-            Government Dashboard
+          <button className={`nav-btn ${view === 'government' ? 'active' : ''}`} onClick={() => setView('government')}>
+            Government
           </button>
           {!walletConnected ? (
-            <button style={styles.connectBtn} onClick={connectWallet}>
+            <button className="connect-btn" onClick={connectWallet}>
               Connect Wallet
             </button>
           ) : (
-            <span style={styles.walletText}>
+            <span className="wallet-pill">
+              <span className="wallet-dot"></span>
               {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
             </span>
           )}
-        </div>
+        </nav>
       </header>
 
       {view === 'prosumer' && (
-        <div style={styles.dashboard}>
+        <div className="dashboard">
           <h2>Prosumer Dashboard</h2>
+          <p className="dashboard-sub">Live generation, forecasts, and your on-chain reputation.</p>
 
           {liveReading && (
-            <div style={{ ...styles.card, backgroundColor: '#e8f5e9', marginBottom: '20px' }}>
-              <h3>🔴 Live Meter Reading</h3>
-              <p style={styles.bigNumber}>{liveReading.kWh} kWh</p>
-              <p>
-                Voltage: {liveReading.voltage}V |{' '}
-                {new Date(liveReading.timestamp).toLocaleTimeString()}
-              </p>
+            <div className="live-card">
+              <div>
+                <div className="live-tag">
+                  <span className="live-dot"></span> Live Meter Reading
+                </div>
+                <div className="live-value">{liveReading.kWh} kWh</div>
+              </div>
+              <div className="live-meta">
+                {liveReading.voltage}V &nbsp;·&nbsp; {new Date(liveReading.timestamp).toLocaleTimeString()}
+              </div>
             </div>
           )}
 
           {forecast && (
-            <div style={{ ...styles.card, backgroundColor: '#e3f2fd', marginBottom: '20px' }}>
-              <h3>🤖 AI Forecast — Tomorrow</h3>
-              <p style={styles.bigNumber}>{forecast.totalDailyForecast} kWh</p>
-              <p>
-                Predicted peak: {forecast.predictedPeakGeneration} kWh at{' '}
-                {forecast.predictedPeakTime} | Confidence: {forecast.confidence}%
-              </p>
+            <div className="forecast-card">
+              <span className="forecast-tag">🤖 AI Forecast — Tomorrow</span>
+              <div className="forecast-value">{forecast.totalDailyForecast} kWh</div>
+              <div className="forecast-meta">
+                Predicted peak: {forecast.predictedPeakGeneration} kWh at {forecast.predictedPeakTime} · Confidence {forecast.confidence}%
+              </div>
+              <div className="confidence-bar">
+                <div className="confidence-fill" style={{ width: `${forecast.confidence}%` }}></div>
+              </div>
             </div>
           )}
 
-          <div style={styles.cardGrid}>
-            <div style={styles.card}>
-              <h3>Trust Score</h3>
-              <p style={styles.bigNumber}>{prosumerData.trustScore}/100</p>
+          <div className="card-grid">
+            <div className="stat-card">
+              <p className="stat-label">Trust Score</p>
+              <div className="trust-ring-wrap">
+                <div className="trust-ring" style={{ '--pct': prosumerData.trustScore }}>
+                  <div className="trust-ring-inner">{prosumerData.trustScore}</div>
+                </div>
+                <span className="stat-value trust" style={{ fontSize: '18px' }}>/ 100</span>
+              </div>
             </div>
-            <div style={styles.card}>
-              <h3>Total Generated</h3>
-              <p style={styles.bigNumber}>{prosumerData.totalGenerated} kWh</p>
+            <div className="stat-card">
+              <p className="stat-label">Total Generated</p>
+              <p className="stat-value">{prosumerData.totalGenerated} kWh</p>
             </div>
-            <div style={styles.card}>
-              <h3>Carbon Credits</h3>
-              <p style={styles.bigNumber}>{prosumerData.carbonCredits}</p>
+            <div className="stat-card">
+              <p className="stat-label">Carbon Credits</p>
+              <p className="stat-value solar">{prosumerData.carbonCredits}</p>
             </div>
-            <div style={styles.card}>
-              <h3>Today's Generation</h3>
-              <p style={styles.bigNumber}>{prosumerData.todayGeneration} kWh</p>
+            <div className="stat-card">
+              <p className="stat-label">Today's Generation</p>
+              <p className="stat-value">{prosumerData.todayGeneration} kWh</p>
             </div>
           </div>
 
-          <div style={{ ...styles.card, marginTop: '30px', textAlign: 'left' }}>
+          <div className="panel-form">
             <h3>💡 List Your Excess Energy</h3>
-            <form onSubmit={handleListEnergy} style={styles.form}>
+            <form onSubmit={handleListEnergy} className="form-row">
               <input
                 type="number"
                 step="0.1"
                 placeholder="kWh to sell"
                 value={listKwh}
                 onChange={(e) => setListKwh(e.target.value)}
-                style={styles.input}
+                className="form-input"
               />
               <input
                 type="number"
@@ -180,9 +195,9 @@ function App() {
                 placeholder="Price per unit (₹)"
                 value={listPrice}
                 onChange={(e) => setListPrice(e.target.value)}
-                style={styles.input}
+                className="form-input"
               />
-              <button type="submit" style={styles.connectBtn}>
+              <button type="submit" className="connect-btn">
                 List on Marketplace
               </button>
             </form>
@@ -191,30 +206,24 @@ function App() {
       )}
 
       {view === 'marketplace' && (
-        <div style={styles.dashboard}>
+        <div className="dashboard">
           <h2>⚡ Energy Marketplace</h2>
-          <p style={{ color: '#666' }}>Buy excess solar energy directly from local prosumers — instantly settled via smart contract.</p>
+          <p className="dashboard-sub">Buy excess solar energy directly from local prosumers — settled instantly via smart contract.</p>
 
-          {purchaseMsg && (
-            <div style={{ ...styles.card, backgroundColor: '#e8f5e9', marginBottom: '20px', textAlign: 'left' }}>
-              {purchaseMsg}
-            </div>
-          )}
+          {purchaseMsg && <div className="purchase-toast">{purchaseMsg}</div>}
 
-          <div style={styles.panelGrid}>
-            {listings.length === 0 && <p>No active listings right now.</p>}
+          <div className="panel-grid">
+            {listings.length === 0 && <p className="dashboard-sub">No active listings right now.</p>}
             {listings.map((l) => (
-              <div key={l.id} style={styles.panelCard}>
-                <div style={styles.panelHeader}>
-                  <strong>{l.seller}</strong>
-                  <span style={{ color: '#4caf50', fontWeight: 'bold' }}>Trust: {l.trustScore}/100</span>
+              <div key={l.id} className="panel-card">
+                <div className="panel-card-header">
+                  <strong className="panel-id">{l.seller}</strong>
+                  <span className="status-pill active">Trust {l.trustScore}</span>
                 </div>
-                <p style={{ margin: '4px 0', color: '#666' }}>📍 {l.location}</p>
-                <p style={{ margin: '4px 0' }}>
-                  <strong>{l.kWh} kWh</strong> available
-                </p>
-                <p style={{ margin: '4px 0' }}>₹{l.price}/unit — Total: ₹{(l.kWh * l.price).toFixed(2)}</p>
-                <button style={{ ...styles.connectBtn, width: '100%', marginTop: '10px' }} onClick={() => handleBuy(l)}>
+                <p className="panel-row">📍 {l.location}</p>
+                <p className="panel-row"><strong>{l.kWh} kWh</strong> available</p>
+                <p className="panel-row">₹{l.price}/unit · Total: <strong>₹{(l.kWh * l.price).toFixed(2)}</strong></p>
+                <button className="buy-btn" onClick={() => handleBuy(l)}>
                   Buy Now
                 </button>
               </div>
@@ -224,61 +233,54 @@ function App() {
       )}
 
       {view === 'government' && (
-        <div style={styles.dashboard}>
+        <div className="dashboard">
           <h2>Government Dashboard</h2>
+          <p className="dashboard-sub">Real-time subsidy verification across monitored panels.</p>
 
-          <div style={styles.cardGrid}>
-            <div style={styles.card}>
-              <h3>Total Panels Monitored</h3>
-              <p style={styles.bigNumber}>{panels.length}</p>
+          <div className="card-grid">
+            <div className="stat-card">
+              <p className="stat-label">Total Panels Monitored</p>
+              <p className="stat-value">{panels.length}</p>
             </div>
-            <div style={styles.card}>
-              <h3>Today's Total Generation</h3>
-              <p style={styles.bigNumber}>{totalGenerationToday} kWh</p>
+            <div className="stat-card">
+              <p className="stat-label">Today's Total Generation</p>
+              <p className="stat-value solar">{totalGenerationToday} kWh</p>
             </div>
-            <div style={styles.card}>
-              <h3>Avg Trust Score</h3>
-              <p style={styles.bigNumber}>{avgTrustScore}/100</p>
+            <div className="stat-card">
+              <p className="stat-label">Avg Trust Score</p>
+              <p className="stat-value trust">{avgTrustScore}/100</p>
             </div>
-            <div style={{ ...styles.card, backgroundColor: fraudAlerts.length > 0 ? '#ffebee' : '#f4f4f4' }}>
-              <h3>Fraud Alerts</h3>
-              <p style={{ ...styles.bigNumber, color: fraudAlerts.length > 0 ? '#c62828' : '#1a1a2e' }}>
-                {fraudAlerts.length}
-              </p>
+            <div className="stat-card">
+              <p className="stat-label">Fraud Alerts</p>
+              <p className="stat-value alert">{fraudAlerts.length}</p>
             </div>
           </div>
 
           {fraudAlerts.length > 0 && (
-            <div style={styles.fraudBanner}>
-              <h3 style={{ margin: '0 0 10px 0' }}>⚠️ Fraud Alerts — Immediate Attention Needed</h3>
+            <div className="fraud-banner">
+              <h3>⚠️ Fraud Alerts — Immediate Attention Needed</h3>
               {fraudAlerts.map((p) => (
-                <p key={p.id} style={{ margin: '4px 0' }}>
+                <p key={p.id}>
                   Panel <strong>{p.id}</strong> ({p.owner}, {p.location}) — <strong>0 kWh generated</strong> for 10+ days. Trust score dropped to {p.trustScore}/100.
                 </p>
               ))}
             </div>
           )}
 
-          <h3 style={{ marginTop: '30px' }}>📍 Subsidized Panels — Location Overview</h3>
-          <div style={styles.panelGrid}>
+          <h3 className="section-label">📍 Subsidized Panels — Location Overview</h3>
+          <div className="panel-grid">
             {panels.map((p) => (
-              <div
-                key={p.id}
-                style={{
-                  ...styles.panelCard,
-                  borderLeft: p.status === 'fraud_alert' ? '5px solid #c62828' : '5px solid #4caf50',
-                }}
-              >
-                <div style={styles.panelHeader}>
-                  <strong>{p.id}</strong>
-                  <span style={{ color: p.status === 'fraud_alert' ? '#c62828' : '#4caf50', fontWeight: 'bold' }}>
-                    {p.status === 'fraud_alert' ? '⚠️ Alert' : '● Active'}
+              <div key={p.id} className={`panel-card ${p.status === 'fraud_alert' ? 'alert' : ''}`}>
+                <div className="panel-card-header">
+                  <span className="panel-id">{p.id}</span>
+                  <span className={`status-pill ${p.status === 'fraud_alert' ? 'alert' : 'active'}`}>
+                    {p.status === 'fraud_alert' ? 'Alert' : 'Active'}
                   </span>
                 </div>
-                <p style={{ margin: '4px 0' }}>{p.owner}</p>
-                <p style={{ margin: '4px 0', color: '#666' }}>📍 {p.location}</p>
-                <p style={{ margin: '4px 0' }}>Today: <strong>{p.kWhToday} kWh</strong></p>
-                <p style={{ margin: '4px 0' }}>Trust Score: <strong>{p.trustScore}/100</strong></p>
+                <p className="panel-row">{p.owner}</p>
+                <p className="panel-row">📍 {p.location}</p>
+                <p className="panel-row">Today: <strong>{p.kWhToday} kWh</strong></p>
+                <p className="panel-row">Trust Score: <strong>{p.trustScore}/100</strong></p>
               </div>
             ))}
           </div>
@@ -287,102 +289,5 @@ function App() {
     </div>
   );
 }
-
-const styles = {
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px 40px',
-    backgroundColor: '#1a1a2e',
-    color: 'white',
-  },
-  title: {
-    margin: 0,
-  },
-  navBtn: {
-    margin: '0 8px',
-    padding: '10px 16px',
-    backgroundColor: '#16213e',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-  },
-  connectBtn: {
-    margin: '0 8px',
-    padding: '10px 16px',
-    backgroundColor: '#f5a623',
-    color: 'black',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-  },
-  walletText: {
-    marginLeft: '10px',
-    color: '#4caf50',
-    fontWeight: 'bold',
-  },
-  dashboard: {
-    padding: '40px',
-  },
-  cardGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '20px',
-    marginTop: '20px',
-  },
-  card: {
-    backgroundColor: '#f4f4f4',
-    padding: '24px',
-    borderRadius: '12px',
-    textAlign: 'center',
-  },
-  bigNumber: {
-    fontSize: '32px',
-    fontWeight: 'bold',
-    color: '#1a1a2e',
-  },
-  fraudBanner: {
-    backgroundColor: '#fff3e0',
-    border: '2px solid #f57c00',
-    borderRadius: '10px',
-    padding: '16px 20px',
-    marginTop: '20px',
-  },
-  panelGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-    gap: '16px',
-    marginTop: '16px',
-  },
-  panelCard: {
-    backgroundColor: '#fafafa',
-    padding: '16px',
-    borderRadius: '8px',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-    textAlign: 'left',
-  },
-  panelHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '8px',
-  },
-  form: {
-    display: 'flex',
-    gap: '10px',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-  },
-  input: {
-    padding: '10px',
-    borderRadius: '6px',
-    border: '1px solid #ccc',
-    flex: '1',
-    minWidth: '150px',
-  },
-};
 
 export default App;
