@@ -141,6 +141,12 @@ body {
   box-shadow: 0 6px 26px rgba(255, 176, 32, 0.4);
 }
 
+.connect-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .wallet-pill {
   margin-left: 10px;
   padding: 8px 14px;
@@ -211,14 +217,7 @@ body {
   border-radius: 14px;
   padding: 22px;
   overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
   animation: fadeInUp 0.5s ease both;
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  border-color: var(--border-glow);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
 }
 
 .stat-label {
@@ -386,6 +385,7 @@ body {
   border-radius: 16px;
   padding: 24px;
   margin-top: 30px;
+  margin-bottom: 20px;
 }
 
 .panel-form h3 {
@@ -437,13 +437,7 @@ body {
   border-radius: 12px;
   padding: 18px;
   text-align: left;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   animation: fadeInUp 0.4s ease both;
-}
-
-.panel-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
 }
 
 .panel-card.alert {
@@ -508,6 +502,12 @@ body {
   box-shadow: 0 6px 20px rgba(0, 217, 163, 0.3);
 }
 
+.buy-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* ---------- Fraud banner ---------- */
 .fraud-banner {
   background: linear-gradient(135deg, rgba(255, 84, 112, 0.12), rgba(18, 26, 46, 0.7));
@@ -547,4 +547,334 @@ body {
   margin-bottom: 20px;
   font-size: 14px;
   animation: fadeInUp 0.3s ease both;
+}
+
+/* ================= 3D / INTRO EFFECTS ================= */
+
+/* ---------- Intro splash ---------- */
+.intro-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: introFadeOut 0.6s ease 1.4s forwards;
+}
+
+.intro-sun {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff3d0, var(--accent-solar) 55%, #b3690a);
+  box-shadow: 0 0 60px 20px rgba(255, 176, 32, 0.55);
+  animation: introPulse 1.4s ease-in-out infinite;
+  position: relative;
+}
+
+.intro-ring {
+  position: absolute;
+  border: 1px solid rgba(255, 176, 32, 0.35);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: ringExpand 1.8s ease-out infinite;
+}
+
+.intro-ring.r1 { animation-delay: 0s; }
+.intro-ring.r2 { animation-delay: 0.5s; }
+.intro-ring.r3 { animation-delay: 1s; }
+
+@keyframes ringExpand {
+  0% { width: 100px; height: 100px; opacity: 0.6; }
+  100% { width: 260px; height: 260px; opacity: 0; }
+}
+
+@keyframes introPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.intro-title {
+  margin-top: 30px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #ffe9b8, var(--accent-solar) 60%, var(--accent-trust));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  animation: introTextIn 0.6s ease 0.3s forwards;
+}
+
+@keyframes introTextIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes introFadeOut {
+  to { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+/* ---------- Parallax scene wrapper ---------- */
+.scene {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------- Floating 3D background orbs ---------- */
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  transition: transform 0.3s ease-out;
+}
+
+.bg-orb.orb-1 {
+  width: 380px;
+  height: 380px;
+  top: -100px;
+  left: -100px;
+  background: radial-gradient(circle, rgba(255, 176, 32, 0.35), transparent 70%);
+}
+
+.bg-orb.orb-2 {
+  width: 420px;
+  height: 420px;
+  top: 20%;
+  right: -140px;
+  background: radial-gradient(circle, rgba(0, 217, 163, 0.3), transparent 70%);
+}
+
+.bg-orb.orb-3 {
+  width: 300px;
+  height: 300px;
+  bottom: -80px;
+  left: 30%;
+  background: radial-gradient(circle, rgba(255, 84, 112, 0.18), transparent 70%);
+}
+
+/* ---------- 3D grid floor ---------- */
+.grid-floor-wrap {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 220px;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  perspective: 300px;
+  opacity: 0.35;
+}
+
+.grid-floor {
+  position: absolute;
+  width: 200%;
+  height: 400px;
+  left: -50%;
+  bottom: -60px;
+  background-image:
+    repeating-linear-gradient(to right, rgba(0, 217, 163, 0.35) 0, rgba(0, 217, 163, 0.35) 1px, transparent 1px, transparent 60px),
+    repeating-linear-gradient(to bottom, rgba(0, 217, 163, 0.35) 0, rgba(0, 217, 163, 0.35) 1px, transparent 1px, transparent 60px);
+  transform: rotateX(75deg);
+  animation: gridScroll 6s linear infinite;
+}
+
+@keyframes gridScroll {
+  from { background-position: 0 0, 0 0; }
+  to { background-position: 0 0, 0 60px; }
+}
+
+.header, .dashboard {
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card, .panel-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.stat-card:hover, .panel-card:hover {
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= EXTRA: PER-SECTION ANIMATIONS ================= */
+
+/* Animated gradient underline under every section heading */
+.dashboard h2 {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.dashboard h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 70px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-solar), var(--accent-trust));
+  background-size: 200% 100%;
+  animation: underlineSlide 3s ease-in-out infinite;
+}
+
+@keyframes underlineSlide {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Staggered wave entrance for stat cards */
+.card-grid > * {
+  opacity: 0;
+  animation: cardRise 0.6s ease forwards;
+}
+.card-grid > *:nth-child(1) { animation-delay: 0.05s; }
+.card-grid > *:nth-child(2) { animation-delay: 0.15s; }
+.card-grid > *:nth-child(3) { animation-delay: 0.25s; }
+.card-grid > *:nth-child(4) { animation-delay: 0.35s; }
+
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Staggered wave entrance for panel/listing cards */
+.panel-grid > * {
+  opacity: 0;
+  animation: cardRise 0.5s ease forwards;
+}
+.panel-grid > *:nth-child(1) { animation-delay: 0.05s; }
+.panel-grid > *:nth-child(2) { animation-delay: 0.12s; }
+.panel-grid > *:nth-child(3) { animation-delay: 0.19s; }
+.panel-grid > *:nth-child(4) { animation-delay: 0.26s; }
+.panel-grid > *:nth-child(5) { animation-delay: 0.33s; }
+.panel-grid > *:nth-child(6) { animation-delay: 0.40s; }
+
+/* Shimmer sweep across stat cards on load */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: shimmerSweep 2.5s ease-in-out 0.6s 1;
+}
+
+@keyframes shimmerSweep {
+  to { left: 150%; }
+}
+
+/* Glowing corner accent on stat cards */
+.stat-card::after {
+  content: "";
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,176,32,0.15), transparent 70%);
+  pointer-events: none;
+}
+
+/* Section subtitle fade-in with slight delay after heading */
+.dashboard-sub {
+  opacity: 0;
+  animation: fadeInUp 0.5s ease 0.1s forwards;
+}
+
+/* Live + forecast cards get a soft breathing glow */
+.live-card {
+  animation: fadeInUp 0.5s ease both, breatheGlowTrust 4s ease-in-out infinite;
+}
+.forecast-card {
+  animation: fadeInUp 0.55s ease both, breatheGlowSolar 4.5s ease-in-out infinite;
+}
+
+@keyframes breatheGlowTrust {
+  0%, 100% { box-shadow: 0 0 0 rgba(0, 217, 163, 0); }
+  50% { box-shadow: 0 0 30px rgba(0, 217, 163, 0.12); }
+}
+
+@keyframes breatheGlowSolar {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 176, 32, 0); }
+  50% { box-shadow: 0 0 30px rgba(255, 176, 32, 0.12); }
+}
+
+/* Fraud banner gets an urgent subtle pulse border */
+.fraud-banner {
+  animation: fadeInUp 0.4s ease both, alertBorderPulse 2s ease-in-out infinite;
+}
+
+@keyframes alertBorderPulse {
+  0%, 100% { border-color: rgba(255, 84, 112, 0.35); }
+  50% { border-color: rgba(255, 84, 112, 0.7); }
+}
+
+/* Nav buttons: subtle lift-in on load */
+.nav-btn, .connect-btn, .wallet-pill {
+  animation: navDropIn 0.5s ease both;
+}
+.nav-btn:nth-child(1) { animation-delay: 0.05s; }
+.nav-btn:nth-child(2) { animation-delay: 0.1s; }
+.nav-btn:nth-child(3) { animation-delay: 0.15s; }
+
+@keyframes navDropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Section label (Government panel list heading) gets icon glow underline too */
+.section-label {
+  position: relative;
+  padding-bottom: 10px;
+}
+.section-label::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 50px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent-trust), transparent);
+}
+
+/* Faint animated circuit-line texture behind each dashboard */
+.dashboard {
+  position: relative;
+}
+.dashboard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Buy button micro bounce on hover (extra life) */
+.buy-btn:hover {
+  animation: microBounce 0.4s ease;
+}
+@keyframes microBounce {
+  0%, 100% { transform: translateY(-1px); }
+  50% { transform: translateY(-3px); }
 }
