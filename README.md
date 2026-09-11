@@ -46,6 +46,7 @@ SolarSettle logs every energy reading immutably on-chain, calculates a trust sco
 | Web3 | Ethers.js |
 | Wallet | MetaMask |
 
+
 ---
 
 ## 📂 Project Structure

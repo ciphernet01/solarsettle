@@ -61,12 +61,44 @@ function App() {
     setParallax({ x, y });
   };
 
+  const MONAD_CHAIN_ID_HEX = '0x279f'; // 10143 in hex
+
+  const ensureMonadNetwork = async () => {
+    const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+    if (currentChainId === MONAD_CHAIN_ID_HEX) return;
+
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: MONAD_CHAIN_ID_HEX }],
+      });
+    } catch (switchErr) {
+      // 4902 = chain not added to MetaMask yet, so add it
+      if (switchErr.code === 4902) {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: MONAD_CHAIN_ID_HEX,
+            chainName: 'Monad Testnet',
+            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+            rpcUrls: ['https://testnet-rpc.monad.xyz'],
+            blockExplorerUrls: ['https://testnet.monadexplorer.com'],
+          }],
+        });
+      } else {
+        throw switchErr;
+      }
+    }
+  };
+
   const connectWallet = async () => {
     if (!window.ethereum) {
       alert('MetaMask install karo pehle!');
       return;
     }
     try {
+      await ensureMonadNetwork();
+
       const provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await provider.send('eth_requestAccounts', []);
       const signer = await provider.getSigner();
