@@ -85,7 +85,7 @@
   gap: 6px;
   margin-left: 10px;
   padding: 5px 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #000000;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
   cursor: pointer;
@@ -94,11 +94,12 @@
 }
 
 .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: #1f1f1f;
 }
 
 .theme-toggle > span:first-child,
 .theme-toggle > span:last-child {
+  color: #ffffff;
   opacity: 0.4;
   transition: opacity 0.2s ease;
 }
@@ -112,7 +113,7 @@
   width: 34px;
   height: 16px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.15);
+  background: #4b4b4b;
 }
 
 .theme-toggle-knob {
@@ -122,13 +123,13 @@
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--accent-yellow);
+  background: #ffffff;
   transition: transform 0.25s ease;
 }
 
 [data-theme="night"] .theme-toggle-knob {
   transform: translateX(18px);
-  background: #cbd5e1;
+  background: #ffffff;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -184,16 +185,15 @@ body {
 }
 
 .brand-icon {
-  font-size: 22px;
-  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.6));
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: grayscale(1) brightness(0) invert(1);
   animation: sunPulse 3s ease-in-out infinite;
 }
 
 .brand-text {
-  background: linear-gradient(90deg, var(--accent-yellow), var(--accent-lime) 55%, var(--accent-green));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #ffffff;
 }
 
 @keyframes sunPulse {
