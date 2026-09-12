@@ -1,4 +1,4 @@
-/* Prosumer dashboard — aligned with the buyer marketplace design system. */
+/* Prosumer dashboard custom elements — aligned with the buyer marketplace design system. */
 
 /* Demo banner */
 .demo-banner {
@@ -6,11 +6,11 @@
   align-items: center;
   gap: 14px;
   padding: 14px 18px;
-  margin-bottom: 20px;
-  border-radius: var(--ss-radius-sm, 12px);
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: var(--ss-surface-alt, #fffbeb);
+  border: 1px solid var(--ss-border, #fde68a);
+  color: var(--ss-text, #92400e);
   font-size: 13.5px;
   line-height: 1.5;
 }
@@ -20,118 +20,15 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-.demo-banner span { color: #a16207; }
-
-/* Section eyebrow + heading, matching buyer cards */
-.ps-section { margin-top: 30px; }
-.ps-section-head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-}
-.ps-eyebrow {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--ss-primary);
-}
-.ps-section-head h3 {
-  margin: 4px 0 0 0;
-  font-size: 19px;
-  color: var(--ss-text);
-  font-weight: 700;
-}
-.ps-section-note { color: var(--ss-muted); font-size: 13px; }
-
-/* Meter hero card */
-.ps-meter-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 18px;
-  padding: 24px 26px;
-  margin-top: 24px;
-  background: linear-gradient(135deg, var(--ss-blue-soft), var(--ss-surface) 65%);
-  border: 1px solid #bfdbfe;
-  border-radius: var(--ss-radius);
-  box-shadow: var(--ss-shadow);
-}
-.ps-meter-left { display: flex; flex-direction: column; gap: 6px; }
-.ps-meter-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--ss-primary);
-}
-.ps-meter-tag .live-dot { background: var(--ss-primary); animation: none; box-shadow: none; }
-.ps-meter-value {
-  font-size: 42px;
-  font-weight: 700;
-  color: var(--ss-text);
-  line-height: 1.1;
-}
-.ps-meter-value small { font-size: 16px; font-weight: 600; color: var(--ss-muted); }
-.ps-meter-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-.ps-meter-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  text-align: right;
-  color: var(--ss-muted);
-  font-size: 13px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-.ps-meter-meta strong { color: var(--ss-text); font-size: 15px; }
-
-/* KPI cards */
-.ps-kpis {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 16px;
-  margin-top: 22px;
-}
-.ps-kpi {
-  background: var(--ss-surface);
-  border: 1px solid var(--ss-border);
-  border-radius: var(--ss-radius);
-  box-shadow: var(--ss-shadow);
-  padding: 20px;
-  transition: transform .18s ease, box-shadow .18s ease;
-}
-.ps-kpi:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(15, 23, 42, .09); }
-.ps-kpi-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--ss-muted);
-  margin-bottom: 8px;
-}
-.ps-kpi-value { font-size: 26px; font-weight: 700; color: var(--ss-text); }
-.ps-kpi-value.blue { color: var(--ss-primary); }
-.ps-kpi-value.green { color: var(--ss-green); }
-.ps-kpi-value.orange { color: var(--ss-orange); }
-.ps-kpi-foot { margin-top: 6px; font-size: 12.5px; color: var(--ss-muted); }
+.demo-banner span { color: var(--ss-muted, #a16207); }
 
 /* Generation activity bars */
 .ps-chart {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  height: 120px;
+  height: 140px;
   padding: 18px 20px 8px 20px;
-  background: var(--ss-surface);
-  border: 1px solid var(--ss-border);
-  border-radius: var(--ss-radius);
-  box-shadow: var(--ss-shadow);
 }
 .ps-bar {
   flex: 1;
@@ -148,31 +45,20 @@
   bottom: calc(100% + 6px);
   left: 50%;
   transform: translateX(-50%);
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: 6px;
   background: var(--ss-text);
   color: #fff;
   font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
+  box-shadow: var(--ss-shadow);
+  z-index: 10;
 }
 .ps-chart-meta {
   display: flex;
   justify-content: space-between;
-  padding: 8px 20px 14px 20px;
+  padding: 4px 20px 14px 20px;
   font-size: 12px;
   color: var(--ss-muted);
-  background: var(--ss-surface);
-  border: 1px solid var(--ss-border);
-  border-top: none;
-  border-radius: 0 0 var(--ss-radius) var(--ss-radius);
-  margin-bottom: 0;
-}
-
-/* Card wrapper for forms/sections */
-.ps-card {
-  background: var(--ss-surface);
-  border: 1px solid var(--ss-border);
-  border-radius: var(--ss-radius);
-  box-shadow: var(--ss-shadow);
-  padding: 22px;
 }
