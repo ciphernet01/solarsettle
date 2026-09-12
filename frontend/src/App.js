@@ -61,16 +61,16 @@ function App() {
     setParallax({ x, y });
   };
 
-  const MONAD_CHAIN_ID_HEX = '0x279f'; // 10143 in hex
+  const MST_CHAIN_ID_HEX = '0x5752035'; // 91562037 in hex
 
-  const ensureMonadNetwork = async () => {
+  const ensureMSTNetwork = async () => {
     const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-    if (currentChainId === MONAD_CHAIN_ID_HEX) return;
+    if (currentChainId === MST_CHAIN_ID_HEX) return;
 
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: MONAD_CHAIN_ID_HEX }],
+        params: [{ chainId: MST_CHAIN_ID_HEX }],
       });
     } catch (switchErr) {
       // 4902 = chain not added to MetaMask yet, so add it
@@ -78,11 +78,11 @@ function App() {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
           params: [{
-            chainId: MONAD_CHAIN_ID_HEX,
-            chainName: 'Monad Testnet',
-            nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
-            rpcUrls: ['https://testnet-rpc.monad.xyz'],
-            blockExplorerUrls: ['https://testnet.monadexplorer.com'],
+            chainId: MST_CHAIN_ID_HEX,
+            chainName: 'MST Testnet',
+            nativeCurrency: { name: 'MSTC', symbol: 'tMSTC', decimals: 18 },
+            rpcUrls: ['https://testnetrpc.mstblockchain.com'],
+            blockExplorerUrls: ['https://testnet.mstscan.com'],
           }],
         });
       } else {
@@ -97,7 +97,7 @@ function App() {
       return;
     }
     try {
-      await ensureMonadNetwork();
+      await ensureMSTNetwork();
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await provider.send('eth_requestAccounts', []);
