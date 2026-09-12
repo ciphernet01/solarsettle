@@ -1,8 +1,10 @@
-import { render, screen } from ''@testing-library/react'';
-import App from ''./App'';
+import { fraudScenarios, makeTelemetry, simulatedProsumers } from './lib/govtMockData';
 
-test(''renders the SolarSettle landing page'', () => {
-  render(<App />);
-  const brand = screen.getAllByText(/solarsettle/i);
-  expect(brand.length).toBeGreaterThan(0);
+test('government telemetry flags simulated fraud cases', () => {
+  const rows = [fraudScenarios.spike.row, ...simulatedProsumers];
+  const telemetry = makeTelemetry(rows);
+
+  expect(telemetry.monitored).toBe(rows.length);
+  expect(telemetry.atRisk).toBe(1);
+  expect(telemetry.avgTrust).toBeLessThan(80);
 });

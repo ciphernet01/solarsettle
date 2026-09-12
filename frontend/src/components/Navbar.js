@@ -7,12 +7,13 @@ export default function Navbar({ links = [] }) {
   const location = useLocation();
 
   const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
+  const roleLabel = selectedRole === 'government' ? 'Govt' : selectedRole === 'prosumer' ? 'Prosumer' : 'Buyer';
 
   return (
     <header className="header">
       <Link to="/" style={{ textDecoration: 'none' }}>
         <h1 className="brand">
-          <span className="brand-icon">☀️</span>
+          <span className="brand-icon">SS</span>
           <span className="brand-text">SolarSettle</span>
         </h1>
       </Link>
@@ -25,7 +26,7 @@ export default function Navbar({ links = [] }) {
         {selectedRole && (
           <span className="wallet-pill" title={selectedRole}>
             <span className="wallet-dot"></span>
-            {selectedRole === 'government' ? '🏛️ Govt' : selectedRole === 'prosumer' ? '🌞 Prosumer' : '⚡ Buyer'}
+            {roleLabel}
           </span>
         )}
         {isWalletConnected && (
@@ -42,7 +43,7 @@ export default function Navbar({ links = [] }) {
       </nav>
       {error && (
         <div className="nav-error" role="alert" onClick={() => setError('')}>
-          ⚠ {error}
+          {error}
         </div>
       )}
     </header>
