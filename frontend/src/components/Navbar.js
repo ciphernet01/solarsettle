@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useWeb3 } from '../context/Web3Context';
 
 export default function Navbar({ links = [] }) {
   const { selectedRole, isWalletConnected, account, logout, error, setError } = useWeb3();
   const location = useLocation();
-
   const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
   const roleLabel = selectedRole === 'government' ? 'Govt' : selectedRole === 'prosumer' ? 'Prosumer' : 'Buyer';
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = 'day';
+    window.localStorage.removeItem('solarsettle-theme');
+  }, []);
 
   return (
     <header className="header">
       <Link to="/" style={{ textDecoration: 'none' }}>
         <h1 className="brand">
-          <span className="brand-icon">SS</span>
+          <img className="brand-icon" src="/solarsettle-logo.svg" alt="" />
           <span className="brand-text">SolarSettle</span>
         </h1>
       </Link>
