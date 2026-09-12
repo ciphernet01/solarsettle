@@ -1,0 +1,64 @@
+/* Prosumer dashboard custom elements — aligned with the buyer marketplace design system. */
+
+/* Demo banner */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: var(--ss-surface-alt, #fffbeb);
+  border: 1px solid var(--ss-border, #fde68a);
+  color: var(--ss-text, #92400e);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.demo-banner strong {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.demo-banner span { color: var(--ss-muted, #a16207); }
+
+/* Generation activity bars */
+.ps-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 140px;
+  padding: 18px 20px 8px 20px;
+}
+.ps-bar {
+  flex: 1;
+  min-height: 4px;
+  border-radius: 6px 6px 2px 2px;
+  background: linear-gradient(180deg, #60a5fa, var(--ss-primary));
+  position: relative;
+  transition: height .4s ease;
+}
+.ps-bar.latest { background: linear-gradient(180deg, #86efac, var(--ss-green)); }
+.ps-bar:hover::after {
+  content: attr(data-value);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--ss-text);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--ss-shadow);
+  z-index: 10;
+}
+.ps-chart-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 20px 14px 20px;
+  font-size: 12px;
+  color: var(--ss-muted);
+}

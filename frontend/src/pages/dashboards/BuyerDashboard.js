@@ -3128,7 +3128,7 @@ function impactPage() {
   const purchased=buyerPurchasedKwh(), co2=buyerCO2(), savings=buyerSavings();
   return `
     <section class="ss-page-head"><div><div class="ss-eyebrow">IMPACT</div><h1>Your clean-energy impact</h1><p>Impact estimates are calculated from recorded buyer transactions.</p></div></section>
-    <section class="ss-metrics-grid">${metricCard("Solar Purchased",`${round(purchased,1)} kWh`,"Recorded purchases")}${metricCard("CO₂ Avoided",`${round(co2,0)} kg`,"Estimated at ${TRANSACTION_CONFIG.co2KgPerKwh} kg/kWh")}${metricCard("Estimated Savings",money(savings),"Compared with reference tariff")}${metricCard("Orders",buyerTransactions().length,"Recorded buyer orders")}</section>
+    <section class="ss-metrics-grid">${metricCard("Solar Purchased",`${round(purchased,1)} kWh`,"Recorded purchases")}${metricCard("CO₂ Avoided",`${round(co2,0)} kg`,'Estimated at ' + TRANSACTION_CONFIG.co2KgPerKwh + ' kg/kWh')}${metricCard("Estimated Savings",money(savings),"Compared with reference tariff")}${metricCard("Orders",buyerTransactions().length,"Recorded buyer orders")}</section>
     <section class="ss-card"><div class="ss-impact-panel"><div class="ss-impact-icon">☀</div><div><h2>Every verified purchase builds a cleaner energy trail.</h2><p>SolarSettle records the buyer-side order, provider, energy quantity and settlement state. Physical delivery remains subject to the applicable grid and eligibility framework.</p></div></div></section>`;
 }
 
