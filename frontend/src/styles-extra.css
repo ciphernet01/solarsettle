@@ -419,6 +419,267 @@
   line-height: 1.35;
 }
 
+.govt-map-panel {
+  position: relative;
+  z-index: 2;
+  margin-bottom: 14px;
+  padding: 18px;
+  overflow: visible;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  transform-origin: center top;
+}
+
+.govt-map-panel:hover,
+.govt-map-panel:focus-within {
+  z-index: 5;
+  transform: scale(1.025);
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.14);
+}
+
+.govt-map-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.govt-map-heading h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.govt-map-heading .eyebrow {
+  margin-bottom: 5px;
+}
+
+.govt-map-heading p:not(.eyebrow) {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px 14px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.map-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.healthy,
+.map-marker.healthy { background: #15803d; }
+.legend-dot.waiting,
+.map-marker.waiting { background: #ca8a04; }
+.legend-dot.risk,
+.map-marker.risk { background: #b91c1c; }
+.legend-dot.neutral { background: #64748b; }
+
+.india-map-stage {
+  position: relative;
+  display: grid;
+  min-height: 330px;
+  grid-template-columns: minmax(240px, 0.8fr) minmax(220px, 1fr);
+  align-items: center;
+  gap: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 10px;
+  background:
+    linear-gradient(135deg, rgba(22, 163, 74, 0.04), transparent 52%),
+    #f8fafc;
+}
+
+.india-map {
+  width: 100%;
+  max-height: 390px;
+  padding: 8px;
+  overflow: visible;
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 220ms ease;
+}
+
+.india-map-stage.zoomed .india-map {
+  transform: scale(1.1);
+}
+
+.india-state {
+  cursor: crosshair;
+  stroke: #334155;
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: fill 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
+}
+
+.india-state.neutral {
+  fill: #e2e8f0;
+}
+
+.india-state.healthy {
+  fill: #86efac;
+  stroke: #166534;
+}
+
+.india-state.waiting {
+  fill: #fde047;
+  stroke: #854d0e;
+}
+
+.india-state.risk {
+  fill: #fca5a5;
+  stroke: #991b1b;
+}
+
+.india-state:hover,
+.india-state:focus,
+.india-state.hovered {
+  stroke: #0f172a;
+  stroke-width: 2.8;
+  filter: brightness(0.96) saturate(1.15);
+  outline: none;
+}
+
+.map-marker {
+  cursor: pointer;
+  fill: #64748b;
+  stroke: #ffffff;
+  stroke-width: 3.5;
+  transition: r 160ms ease, stroke-width 160ms ease;
+}
+
+.map-marker.healthy { fill: #15803d; }
+.map-marker.waiting { fill: #ca8a04; }
+.map-marker.risk { fill: #b91c1c; }
+
+.map-marker:hover,
+.map-marker:focus {
+  r: 10;
+  stroke-width: 4;
+  outline: none;
+}
+
+.map-pulse {
+  fill: transparent;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.map-pulse.healthy { stroke: var(--accent-green); stroke-width: 2; }
+.map-pulse.waiting { stroke: #ca8a04; stroke-width: 2.5; }
+.map-pulse.risk { stroke: #b91c1c; stroke-width: 2.5; }
+
+.map-connection.selected .map-pulse {
+  animation: mapPulse 1.7s ease-out infinite;
+  opacity: 0.45;
+}
+
+@keyframes mapPulse {
+  0% { opacity: 0.5; transform: scale(0.75); transform-origin: center; }
+  100% { opacity: 0; transform: scale(1.55); transform-origin: center; }
+}
+
+.map-callout rect {
+  fill: rgba(15, 23, 42, 0.94);
+}
+
+.map-callout text {
+  fill: #ffffff;
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.map-callout .callout-risk {
+  fill: #fca5a5;
+}
+
+.map-detail {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  min-height: 160px;
+  margin: 18px;
+  padding: 18px;
+  border-left: 3px solid var(--accent-green);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.map-detail strong {
+  color: var(--navy);
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.map-detail-kicker {
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.map-detail span,
+.map-detail em {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.map-detail em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+.map-detail.risk {
+  border-left-color: var(--accent-alert);
+  background: rgba(254, 242, 242, 0.92);
+}
+
+.map-detail.risk em,
+.risk-reason {
+  color: var(--accent-alert) !important;
+  font-weight: 800;
+}
+
+.state-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.state-counts b {
+  padding: 5px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+.healthy-text { color: #166534; background: #dcfce7; }
+.waiting-text { color: #854d0e; background: #fef9c3; }
+.risk-text { color: #991b1b; background: #fee2e2; }
+
 .risk-table .data-table td {
   vertical-align: middle;
   cursor: pointer;
@@ -810,5 +1071,24 @@
   .segmented {
     width: 100%;
     overflow-x: auto;
+  }
+
+  .govt-map-heading,
+  .map-legend {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .map-legend {
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  .india-map-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .india-map-stage.zoomed .india-map {
+    transform: scale(1.04);
   }
 }
