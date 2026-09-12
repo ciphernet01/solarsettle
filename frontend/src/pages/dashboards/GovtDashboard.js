@@ -4,6 +4,7 @@ import Navbar from '../../components/Navbar';
 import TiltCard from '../../components/TiltCard';
 import useTx from '../../hooks/useTx';
 import indiaMap from '@svg-maps/india';
+import './DashboardTheme.css';
 
 const INACTIVITY_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 3600 * 1000;
@@ -141,7 +142,7 @@ export default function GovtDashboard() {
   ], [prosumers, pendingList]);
 
   return (
-    <div className="App">
+    <div className="App buyer-theme">
       <Navbar links={[{ label: 'Marketplace', to: '/buyer' }]} />
       <div className="dashboard">
         <h2>🏛️ Government Dashboard</h2>
