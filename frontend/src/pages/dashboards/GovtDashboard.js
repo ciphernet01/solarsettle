@@ -1,56 +1,38 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useWeb3 } from '../../context/Web3Context';
 import Navbar from '../../components/Navbar';
+import TiltCard from '../../components/TiltCard';
 import useTx from '../../hooks/useTx';
-import {
-  baselineGovtStats,
-  fraudScenarios,
-  makeTelemetry,
-  simulatedPendingApprovals,
-  simulatedProsumers,
-} from '../../lib/govtMockData';
-import { getSimListings, onSimulationChange } from '../../lib/sharedSimulation';
 
 const INACTIVITY_WINDOW_DAYS = 7;
 const DAY_MS = 24 * 3600 * 1000;
-
-const FILTERS = [
-  { key: 'all', label: 'All' },
-  { key: 'risk', label: 'Risk' },
-  { key: 'healthy', label: 'Healthy' },
-  { key: 'chain', label: 'On-chain' },
+const DEMO_PENDING = [
+  { address: '0x7A1D00000000000000000000000000000000C101', subsidyID: 'PM-KUSUM-2026-0142', location: 'Bhopal, MP', capacityKw: '5.0' },
+  { address: '0x7A1D00000000000000000000000000000000C102', subsidyID: 'ROOFTOP-2026-087', location: 'Indore, MP', capacityKw: '3.5' },
+];
+const DEMO_PROSUMERS = [
+  { address: '0x7A1D00000000000000000000000000000000C201', subsidyID: 'PM-KUSUM-2025-031', location: 'Ujjain, MP', capacityKw: '8.0', trustScore: 96, generated: 8420, credits: 8420, lastReading: 'Today', daysSilent: 0, atRisk: false },
+  { address: '0x7A1D00000000000000000000000000000000C202', subsidyID: 'ROOFTOP-2025-119', location: 'Bhopal, MP', capacityKw: '5.0', trustScore: 88, generated: 5210, credits: 5210, lastReading: 'Yesterday', daysSilent: 1, atRisk: false },
+  { address: '0x7A1D00000000000000000000000000000000C203', subsidyID: 'PM-KUSUM-2024-072', location: 'Gwalior, MP', capacityKw: '10.0', trustScore: 34, generated: 6190, credits: 6190, lastReading: '9 days ago', daysSilent: 9, atRisk: true },
 ];
 
 export default function GovtDashboard() {
-  const { isWalletConnected, account, contract, connectWallet, connecting, chain, configured } = useWeb3();
-  const { pending, toast, run } = useTx();
-  const [stats, setStats] = useState(baselineGovtStats);
-  const [pendingList, setPendingList] = useState(simulatedPendingApprovals);
-  const [chainPending, setChainPending] = useState([]);
-  const [chainRows, setChainRows] = useState([]);
-  const [simRows, setSimRows] = useState(simulatedProsumers);
-  const [simListings, setSimListings] = useState(() => getSimListings());
-  const [selectedAddress, setSelectedAddress] = useState(simulatedProsumers[0].address);
-  const [filter, setFilter] = useState('all');
-  const [lastSync, setLastSync] = useState(new Date());
-  const [events, setEvents] = useState([
-    'Telemetry synced from simulated feeder network',
-    'Subsidy registry cross-check completed',
-    'MetaMask transaction layer standing by',
-  ]);
-
-  const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
+  const { isWalletConnected, account, contract, connectWallet, connecting } = useWeb3();
+  const { pending, toast, run, setToast } = useTx();
+  const [stats, setStats] = useState(null);
+  const [pendingList, setPendingList] = useState([]);
+  const [prosumers, setProsumers] = useState([]);
+  const [demoMode, setDemoMode] = useState(false);
 
   const load = useCallback(async () => {
     if (!contract) {
-      setStats(baselineGovtStats);
-      setPendingList(simulatedPendingApprovals);
-      setChainPending([]);
-      setChainRows([]);
-      setLastSync(new Date());
+      setStats({ totalKwh: 19820, totalListings: 17, activeListings: 6, registeredCount: 12 });
+      setPendingList(DEMO_PENDING);
+      setProsumers(DEMO_PROSUMERS);
+      setDemoMode(true);
       return;
     }
-
+    setDemoMode(false);
     try {
       const s = await contract.platformStats();
       setStats({
@@ -59,305 +41,103 @@ export default function GovtDashboard() {
         activeListings: Number(s[2]),
         registeredCount: Number(s[3]),
       });
-
       const pendingAddrs = await contract.pendingProsumers();
       const pendingRows = [];
       for (const addr of pendingAddrs) {
         const p = await contract.getProsumer(addr);
-        pendingRows.push({
-          address: addr,
-          subsidyID: p.subsidyID,
-          location: p.location,
-          capacityKw: (Number(p.panelCapacity) / 1000).toFixed(1),
-          source: 'On-chain',
-        });
+        pendingRows.push({ address: addr, subsidyID: p.subsidyID, location: p.location, capacityKw: (Number(p.panelCapacity) / 1000).toFixed(1) });
       }
-      setChainPending(pendingRows);
-      setPendingList([...pendingRows, ...simulatedPendingApprovals]);
-
+      setPendingList(pendingRows);
       const regAddrs = await contract.registeredProsumers();
       const rows = [];
       for (const addr of regAddrs) {
         const p = await contract.getProsumer(addr);
-        const lastMs = p.lastReadingTimestamp ? Number(p.lastReadingTimestamp) * 1000 : Date.now();
-        const daysSilent = Math.max(0, Math.floor((Date.now() - lastMs) / DAY_MS));
-        const trustScore = Number(p.trustScore);
-        const inactive = daysSilent > INACTIVITY_WINDOW_DAYS;
-        const lowTrust = trustScore < 40;
-
+        const last = Number(p.lastReadingTimestamp) * 1000;
+        const daysSilent = Math.floor((Date.now() - last) / DAY_MS);
         rows.push({
-          address: addr,
-          subsidyID: p.subsidyID,
-          location: p.location,
-          feeder: 'CHAIN-FEED',
-          meterId: 'ONCHAIN-' + addr.slice(2, 8).toUpperCase(),
+          address: addr, subsidyID: p.subsidyID, location: p.location,
           capacityKw: (Number(p.panelCapacity) / 1000).toFixed(1),
-          trustScore,
-          generated: Number(p.totalEnergyGenerated),
-          credits: Number(p.carbonCredits),
-          lastReading: new Date(lastMs).toLocaleDateString(),
-          daysSilent,
-          lastKwh: 0,
-          expectedKwh: Math.round((Number(p.panelCapacity) * 5) / 1000),
-          riskScore: inactive ? 76 : lowTrust ? 68 : Math.max(8, 100 - trustScore),
-          riskReason: inactive
-            ? 'No meter reading inside the 7-day window'
-            : lowTrust
-              ? 'Trust score below intervention threshold'
-              : 'Normal on-chain activity',
-          anomalyTags: inactive ? ['meter silent'] : lowTrust ? ['low trust'] : ['on-chain verified'],
-          status: inactive || lowTrust ? 'Fraud Risk' : 'Healthy',
-          source: 'On-chain',
+          trustScore: Number(p.trustScore), generated: Number(p.totalEnergyGenerated),
+          credits: Number(p.carbonCredits), lastReading: new Date(last).toLocaleDateString(),
+          daysSilent, atRisk: daysSilent > INACTIVITY_WINDOW_DAYS || Number(p.trustScore) < 40,
         });
       }
-      setChainRows(rows);
-      setLastSync(new Date());
-      setEvents((current) => ['On-chain registry refreshed through MetaMask provider', ...current].slice(0, 6));
-    } catch (e) {
-      console.error(e);
-      setEvents((current) => ['Contract read failed; continuing with simulated command data', ...current].slice(0, 6));
-    }
+      setProsumers(rows);
+    } catch (e) { console.error(e); }
   }, [contract]);
 
   useEffect(() => { load(); }, [load]);
-  useEffect(() => onSimulationChange(() => setSimListings(getSimListings())), []);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setSimRows((rows) => rows.map((row) => {
-        if (row.status === 'Fraud Risk') return row;
-        const drift = Math.round((Math.random() * 4) - 2);
-        return {
-          ...row,
-          lastKwh: Math.max(0, row.expectedKwh + drift),
-          riskScore: Math.max(5, Math.min(30, row.riskScore + Math.round(Math.random() * 4 - 2))),
-        };
-      }));
-      setLastSync(new Date());
-    }, 6000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const displayRows = useMemo(() => [...simRows, ...chainRows], [simRows, chainRows]);
-  const telemetry = useMemo(() => makeTelemetry(displayRows), [displayRows]);
-  const activeSimListings = simListings.filter((item) => item.active);
-  const selectedCase = displayRows.find((row) => row.address === selectedAddress) || displayRows[0];
-
-  const visibleRows = displayRows.filter((row) => {
-    if (filter === 'risk') return row.status === 'Fraud Risk';
-    if (filter === 'healthy') return row.status === 'Healthy';
-    if (filter === 'chain') return row.source === 'On-chain';
-    return true;
-  });
-
-  const handleApprove = async (row) => {
-    if (row.source !== 'On-chain') {
-      setEvents((current) => [`Simulated approval held for ${row.subsidyID}`, ...current].slice(0, 6));
+  const handleApprove = async (addr) => {
+    if (demoMode) {
+      setPendingList((current) => current.filter((item) => item.address !== addr));
+      setStats((current) => ({ ...current, registeredCount: current.registeredCount + 1 }));
+      setToast({ kind: 'ok', text: 'Demo approval completed - sample prosumer moved into the registry.' });
       return;
     }
-    const ok = await run(() => contract.approveProsumer(row.address), 'Approved prosumer ' + short(row.address));
+    const ok = await run(() => contract.approveProsumer(addr), 'Approved prosumer ' + addr.slice(0, 6) + '...');
     if (ok) await load();
   };
 
-  const handlePenalty = async (row) => {
-    if (row.source !== 'On-chain') {
-      setSimRows((rows) => rows.map((item) => item.address === row.address
-        ? { ...item, trustScore: Math.max(0, item.trustScore - 20), anomalyTags: [...new Set([...item.anomalyTags, 'penalty simulated'])] }
-        : item));
-      setEvents((current) => [`Penalty simulated for ${row.meterId}`, ...current].slice(0, 6));
+  const handleCheckInactivity = async (addr) => {
+    if (demoMode) {
+      setProsumers((current) => current.map((prosumer) => prosumer.address === addr
+        ? { ...prosumer, trustScore: Math.max(0, prosumer.trustScore - 20), atRisk: true }
+        : prosumer));
+      setToast({ kind: 'ok', text: 'Demo inactivity penalty applied - trust score reduced by 20 points.' });
       return;
     }
-    const ok = await run(() => contract.checkInactivity(row.address), 'Inactivity penalty checked for ' + short(row.address));
+    const ok = await run(() => contract.checkInactivity(addr), 'Inactivity check executed for ' + addr.slice(0, 6) + '...');
     if (ok) await load();
   };
 
-  const injectFraud = (scenarioKey) => {
-    const scenario = fraudScenarios[scenarioKey];
-    setSimRows((rows) => {
-      const deduped = rows.filter((row) => row.address !== scenario.row.address);
-      return [scenario.row, ...deduped];
-    });
-    setSelectedAddress(scenario.row.address);
-    setFilter('risk');
-    setEvents((current) => [`${scenario.label} detected: ${scenario.row.evidence}`, ...current].slice(0, 6));
-  };
-
-  const resetSimulation = () => {
-    setSimRows(simulatedProsumers);
-    setSelectedAddress(simulatedProsumers[0].address);
-    setFilter('all');
-    setEvents((current) => ['Simulation reset to verified operating baseline', ...current].slice(0, 6));
-  };
+  const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
 
   return (
-    <div className="App govt-app">
+    <div className="App">
       <Navbar links={[{ label: 'Marketplace', to: '/buyer' }]} />
-      <main className="govt-console">
-        <section className="govt-hero">
-          <div>
-            <p className="eyebrow">SolarSettle regulatory command center</p>
-            <h2>Government Monitoring Dashboard</h2>
-            <p className="dashboard-sub">Approve prosumers, monitor meter anomalies, and route enforcement through MetaMask-backed smart-contract transactions.</p>
+      <div className="dashboard">
+        <h2>🏛️ Government Dashboard</h2>
+        <p className="dashboard-sub">Role: Government. {isWalletConnected ? ('Connected: ' + short(account)) : 'Presentation preview with sample registry data.'}</p>
+
+        {demoMode && <div className="demo-banner"><strong>Demo presentation mode</strong><span>Sample registry values are shown for review. Connect MetaMask to switch to live contract data.</span></div>}
+
+        {!isWalletConnected && (
+          <div className="panel-form">
+            <h3>🔌 Connect MetaMask to interact with the blockchain</h3>
+            <p className="dashboard-sub">Approvals, penalties, and monitoring require a connected wallet.</p>
+            <button className="connect-btn" onClick={connectWallet} disabled={connecting}>
+              {connecting ? 'Connecting...' : 'Connect MetaMask'}
+            </button>
           </div>
-          <div className="wallet-status">
-            <span className={'connection-dot ' + (isWalletConnected ? 'online' : 'offline')}></span>
-            <div>
-              <strong>{isWalletConnected ? short(account) : 'MetaMask not connected'}</strong>
-              <span>{isWalletConnected ? `Connected to ${chain?.chainName || 'configured network'}` : configured ? 'Connect to approve and penalize on-chain' : 'Deploy contract before live writes'}</span>
-            </div>
-            {!isWalletConnected && (
-              <button className="connect-btn" onClick={connectWallet} disabled={connecting}>
-                {connecting ? 'Connecting...' : 'Connect MetaMask'}
-              </button>
-            )}
+        )}
+
+        {stats && (
+          <div className="card-grid">
+            <TiltCard className="stat-card"><p className="stat-label">Total Generation Logged</p><p className="stat-value solar">{stats.totalKwh.toLocaleString('en-IN')} kWh</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">Approved Prosumers</p><p className="stat-value trust">{stats.registeredCount}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">Active Listings</p><p className="stat-value">{stats.activeListings}</p></TiltCard>
+            <TiltCard className="stat-card"><p className="stat-label">Pending Approvals</p><p className="stat-value" style={{ color: pendingList.length > 0 ? 'var(--accent-alert)' : undefined }}>{pendingList.length}</p></TiltCard>
           </div>
-        </section>
+        )}
 
-        <section className="ops-strip">
-          <Metric label="Generation Logged" value={`${stats.totalKwh.toLocaleString('en-IN')} kWh`} />
-          <Metric label="Registered Prosumers" value={(stats.registeredCount || telemetry.monitored).toLocaleString('en-IN')} />
-          <Metric label="Open Risk Cases" value={telemetry.atRisk} tone={telemetry.atRisk ? 'alert' : 'good'} />
-          <Metric label="Average Trust" value={`${telemetry.avgTrust}/100`} tone="good" />
-          <Metric label="Market Listings" value={stats.activeListings + activeSimListings.length} />
-        </section>
+        <h3 className="section-label" style={{ marginTop: 30 }}>📝 Registration approvals</h3>
+        {!contract ? <p className="dashboard-sub">Connect a wallet to view approvals.</p> : pendingList.length === 0 ? <p className="dashboard-sub">No pending registrations.</p> : (
+          <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th></th></tr></thead><tbody>
+            {pendingList.map((r) => (<tr key={r.address}><td className="mono">{short(r.address)}</td><td className="mono">{r.subsidyID}</td><td>{r.location}</td><td>{r.capacityKw} kW</td><td><button className="buy-btn" style={{ width: 'auto', margin: 0 }} onClick={() => handleApprove(r.address)} disabled={pending}>{demoMode ? 'Approve sample' : pending ? 'Confirming...' : 'Approve'}</button></td></tr>))}
+          </tbody></table></div>
+        )}
 
-        <section className="govt-workbench">
-          <div className="workbench-main">
-            <div className="toolbar-row">
-              <div>
-                <h3>Risk Queue</h3>
-                <p>Last sync {lastSync.toLocaleTimeString()}</p>
-              </div>
-              <div className="segmented">
-                {FILTERS.map((item) => (
-                  <button key={item.key} className={filter === item.key ? 'active' : ''} onClick={() => setFilter(item.key)}>
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="scenario-row">
-              {Object.entries(fraudScenarios).map(([key, scenario]) => (
-                <button key={key} onClick={() => injectFraud(key)}>
-                  <strong>{scenario.label}</strong>
-                  <span>{scenario.action}</span>
-                </button>
-              ))}
-              <button onClick={resetSimulation}>
-                <strong>Reset</strong>
-                <span>Restore verified baseline</span>
-              </button>
-            </div>
-
-            <div className="table-wrap risk-table">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Prosumer</th>
-                    <th>Meter</th>
-                    <th>Observed</th>
-                    <th>Expected</th>
-                    <th>Trust</th>
-                    <th>Risk</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleRows.map((row) => (
-                    <tr key={row.address} className={row.address === selectedCase?.address ? 'selected-row' : ''} onClick={() => setSelectedAddress(row.address)}>
-                      <td><strong>{row.subsidyID}</strong><span>{short(row.address)} - {row.location}</span></td>
-                      <td><strong>{row.meterId}</strong><span>{row.feeder}</span></td>
-                      <td>{row.lastKwh} kWh</td>
-                      <td>{row.expectedKwh} kWh</td>
-                      <td><strong>{row.trustScore}/100</strong></td>
-                      <td><RiskBar value={row.riskScore} /></td>
-                      <td><span className={'status-pill ' + (row.status === 'Fraud Risk' ? 'alert' : 'active')}>{row.status}</span></td>
-                      <td><button className="nav-btn inspect-btn" onClick={(e) => { e.stopPropagation(); setSelectedAddress(row.address); }}>Inspect</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="approval-panel">
-              <div className="toolbar-row compact">
-                <div>
-                  <h3>Registration Approvals</h3>
-                  <p>{chainPending.length} on-chain, {simulatedPendingApprovals.length} simulated</p>
-                </div>
-              </div>
-              <div className="approval-list">
-                {pendingList.map((row) => (
-                  <div className="approval-item" key={row.address}>
-                    <div>
-                      <strong>{row.subsidyID}</strong>
-                      <span>{short(row.address)} - {row.location} - {row.capacityKw} kW</span>
-                      {row.risk && <em>{row.risk}</em>}
-                    </div>
-                    <button className="buy-btn" onClick={() => handleApprove(row)} disabled={pending && row.source === 'On-chain'}>
-                      {row.source === 'On-chain' ? (pending ? 'Confirming...' : 'Approve') : 'Review'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <aside className="case-panel">
-            {selectedCase && (
-              <>
-                <div className="case-head">
-                  <span className={'source-badge ' + selectedCase.source.toLowerCase()}>{selectedCase.source}</span>
-                  <h3>{selectedCase.status === 'Fraud Risk' ? 'Incident Case' : 'Verified Account'}</h3>
-                  <p>{selectedCase.riskReason}</p>
-                </div>
-                <dl className="case-facts">
-                  <div><dt>Wallet</dt><dd>{short(selectedCase.address)}</dd></div>
-                  <div><dt>Subsidy</dt><dd>{selectedCase.subsidyID}</dd></div>
-                  <div><dt>Meter</dt><dd>{selectedCase.meterId}</dd></div>
-                  <div><dt>Credits</dt><dd>{selectedCase.credits.toLocaleString('en-IN')}</dd></div>
-                  <div><dt>Last Reading</dt><dd>{selectedCase.lastReading}</dd></div>
-                  <div><dt>Silent Days</dt><dd>{selectedCase.daysSilent}</dd></div>
-                </dl>
-                <div className="tag-stack">
-                  {selectedCase.anomalyTags.map((tag) => <span key={tag}>{tag}</span>)}
-                </div>
-                <button className="connect-btn case-action" onClick={() => handlePenalty(selectedCase)} disabled={pending && selectedCase.source === 'On-chain'}>
-                  {selectedCase.source === 'On-chain' ? 'Run MetaMask Enforcement' : 'Simulate Enforcement'}
-                </button>
-              </>
-            )}
-
-            <div className="event-feed">
-              <h3>Audit Trail</h3>
-              {events.map((event, index) => (
-                <p key={event + index}><span>{index === 0 ? 'Now' : `${index * 2}m`}</span>{event}</p>
-              ))}
-            </div>
-          </aside>
-        </section>
-      </main>
+        <h3 className="section-label" style={{ marginTop: 30 }}>📍 Registered prosumers — live monitoring</h3>
+        {prosumers.length === 0 ? <p className="dashboard-sub">No approved prosumers yet.</p> : (
+          <div className="table-wrap"><table className="data-table"><thead><tr><th>Wallet</th><th>Subsidy ID</th><th>Location</th><th>Capacity</th><th>Trust</th><th>Generated</th><th>Last Reading</th><th>Status</th><th></th></tr></thead><tbody>
+            {prosumers.map((p) => (
+              <tr key={p.address}><td className="mono">{short(p.address)}</td><td className="mono">{p.subsidyID}</td><td>{p.location}</td><td>{p.capacityKw} kW</td><td><strong>{p.trustScore}/100</strong></td><td>{p.generated} kWh</td><td>{p.lastReading} {p.daysSilent > INACTIVITY_WINDOW_DAYS ? '(' + p.daysSilent + 'd silent)' : ''}</td><td><span className={'status-pill ' + (p.atRisk ? 'alert' : 'active')}>{p.atRisk ? 'Fraud Risk' : 'Healthy'}</span></td><td>{p.atRisk && <button className="nav-btn" style={{ color: 'var(--accent-alert)' }} onClick={() => handleCheckInactivity(p.address)} disabled={pending}>{demoMode ? 'Apply sample penalty' : 'Apply Penalty'}</button>}</td></tr>
+            ))}
+          </tbody></table></div>
+        )}
+      </div>
       {toast && <div className="tx-toast">{toast.text}</div>}
-    </div>
-  );
-}
-
-function Metric({ label, value, tone = 'neutral' }) {
-  return (
-    <div className={'ops-metric ' + tone}>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function RiskBar({ value }) {
-  return (
-    <div className="risk-meter" aria-label={`Risk ${value} percent`}>
-      <span style={{ width: `${Math.max(4, Math.min(100, value))}%` }}></span>
-      <strong>{value}</strong>
     </div>
   );
 }
