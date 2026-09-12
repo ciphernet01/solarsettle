@@ -5,6 +5,7 @@ import { useWeb3 } from '../../context/Web3Context';
 import Navbar from '../../components/Navbar';
 import TiltCard from '../../components/TiltCard';
 import useTx from '../../hooks/useTx';
+import './DashboardTheme.css';
 import { generateReading } from '../../lib/meterSimulator';
 
 const DEMO_PROFILE = {
@@ -78,7 +79,7 @@ export default function ProsumerDashboard() {
   };
 
   return (
-    <div className="App">
+    <div className="App buyer-theme">
       <Navbar links={[{ label: 'Marketplace', to: '/buyer' }]} />
       <div className="dashboard">
         <h2>Prosumer Dashboard</h2>
