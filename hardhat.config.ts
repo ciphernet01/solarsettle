@@ -1,11 +1,11 @@
 import type { HardhatUserConfig } from "hardhat/config";
 import hardhatToolboxMochaEthers from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import * as dotenv from "dotenv";
- 
+
 dotenv.config();
- 
+
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
- 
+
 const config: HardhatUserConfig = {
   plugins: [hardhatToolboxMochaEthers],
   solidity: "0.8.28",
@@ -24,7 +24,13 @@ const config: HardhatUserConfig = {
       chainId: 10143,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
+    mstTestnet: {
+      type: "http",
+      url: "https://testnetrpc.mstblockchain.com",
+      chainId: 91562037,
+      accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+    },
   },
 };
- 
+
 export default config;
