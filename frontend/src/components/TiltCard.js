@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 
+/** Card with a subtle 3D tilt-on-hover effect. */
 export default function TiltCard({ children, className = '' }) {
   const ref = useRef(null);
 
@@ -11,9 +12,9 @@ export default function TiltCard({ children, className = '' }) {
     const y = e.clientY - rect.top;
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -8;
-    const rotateY = ((x - centerX) / centerX) * 8;
-    el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-6px) scale(1.02)`;
+    const rotateX = ((y - centerY) / centerY) * -6;
+    const rotateY = ((x - centerX) / centerX) * 6;
+    el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px) scale(1.015)`;
   };
 
   const handleMouseLeave = () => {
