@@ -496,6 +496,23 @@
 .map-marker.risk { background: #b91c1c; }
 .legend-dot.neutral { background: #64748b; }
 
+.heat-legend {
+  gap: 3px !important;
+  margin-left: 4px;
+  color: var(--text-muted);
+}
+
+.heat-swatch {
+  display: inline-block;
+  width: 13px;
+  height: 8px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+}
+
+.heat-swatch.heat-low { background: #dcfce7; }
+.heat-swatch.heat-mid { background: #fde047; }
+.heat-swatch.heat-high { background: #dc2626; }
+
 .india-map-stage {
   position: relative;
   display: grid;
@@ -534,30 +551,12 @@
   transition: fill 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
 }
 
-.india-state.neutral {
-  fill: #e2e8f0;
-}
-
-.india-state.healthy {
-  fill: #86efac;
-  stroke: #166534;
-}
-
-.india-state.waiting {
-  fill: #fde047;
-  stroke: #854d0e;
-}
-
-.india-state.risk {
-  fill: #fca5a5;
-  stroke: #991b1b;
-}
-
-.india-state.mixed {
-  fill: #fde68a;
-  stroke: #b91c1c;
-  stroke-width: 2;
-}
+.india-state.heat-0 { fill: #e2e8f0; }
+.india-state.heat-1 { fill: #dcfce7; stroke: #166534; }
+.india-state.heat-2 { fill: #bef264; stroke: #3f6212; }
+.india-state.heat-3 { fill: #fde047; stroke: #854d0e; }
+.india-state.heat-4 { fill: #fb923c; stroke: #9a3412; }
+.india-state.heat-5 { fill: #ef4444; stroke: #991b1b; }
 
 .india-state:hover,
 .india-state:focus,
@@ -611,6 +610,10 @@
   fill: rgba(15, 23, 42, 0.94);
 }
 
+.map-callout {
+  pointer-events: none;
+}
+
 .map-callout text {
   fill: #ffffff;
   font-family: var(--font-body);
@@ -645,6 +648,33 @@
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+.heat-score {
+  color: #b91c1c !important;
+  font-family: var(--font-mono);
+  font-size: 16px !important;
+  font-weight: 800;
+}
+
+.map-detail small {
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.state-coverage {
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.state-coverage span {
+  display: block;
+  height: 100%;
+  margin: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #15803d, #ca8a04, #b91c1c);
 }
 
 .map-detail span,
