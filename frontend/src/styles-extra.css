@@ -553,6 +553,12 @@
   stroke: #991b1b;
 }
 
+.india-state.mixed {
+  fill: #fde68a;
+  stroke: #b91c1c;
+  stroke-width: 2;
+}
+
 .india-state:hover,
 .india-state:focus,
 .india-state.hovered {
@@ -674,6 +680,20 @@
   padding: 5px 7px;
   border-radius: 5px;
   font-size: 11px;
+}
+
+.state-risk-list {
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+  border-left: 3px solid #b91c1c;
+  background: #fee2e2;
+}
+
+.state-risk-list strong {
+  color: #991b1b;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 .healthy-text { color: #166534; background: #dcfce7; }

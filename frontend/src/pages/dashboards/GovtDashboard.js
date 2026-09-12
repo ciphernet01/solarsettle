@@ -18,11 +18,30 @@ const DEMO_PROSUMERS = [
 ];
 
 const CITY_POSITIONS = {
-  Bhopal: { x: 270, y: 390 }, Indore: { x: 226, y: 410 }, Gwalior: { x: 267, y: 330 },
-  Jabalpur: { x: 325, y: 385 }, Ujjain: { x: 220, y: 392 }, Sagar: { x: 295, y: 390 },
+  // Calibrated to @svg-maps/india's 612 x 696 viewBox. These points sit inside
+  // Madhya Pradesh's path, rather than using screen-space coordinates.
+  Bhopal: { x: 204, y: 336 },
+  Indore: { x: 175, y: 348 },
+  Gwalior: { x: 219, y: 271 },
+  Jabalpur: { x: 253, y: 338 },
+  Ujjain: { x: 173, y: 338 },
+  Sagar: { x: 229, y: 318 },
 };
 
 const STATE_NAMES = { MP: 'Madhya Pradesh', MH: 'Maharashtra', RJ: 'Rajasthan', GJ: 'Gujarat', UP: 'Uttar Pradesh', DL: 'Delhi', PB: 'Punjab', HR: 'Haryana', KA: 'Karnataka', TN: 'Tamil Nadu', WB: 'West Bengal', OD: 'Odisha', BR: 'Bihar', AP: 'Andhra Pradesh', TS: 'Telangana', KL: 'Kerala', JH: 'Jharkhand', CT: 'Chhattisgarh', UK: 'Uttarakhand', HP: 'Himachal Pradesh', JK: 'Jammu and Kashmir', AS: 'Assam' };
+
+function getRiskReason(row) {
+  if (row.daysSilent > INACTIVITY_WINDOW_DAYS) {
+    return `Meter silent for ${row.daysSilent} days; intervention threshold is ${INACTIVITY_WINDOW_DAYS} days`;
+  }
+  if (row.trustScore < 40) {
+    return `Trust score ${row.trustScore}/100 is below the 40/100 intervention threshold`;
+  }
+  if (row.expectedKwh && row.lastKwh > row.expectedKwh * 1.5) {
+    return `Observed generation ${row.lastKwh} kWh exceeds the expected ${row.expectedKwh} kWh ceiling`;
+  }
+  return 'Connection requires government review';
+}
 
 export default function GovtDashboard() {
   const { isWalletConnected, account, contract, connectWallet, connecting } = useWeb3();
@@ -103,7 +122,10 @@ export default function GovtDashboard() {
 
   const short = (a) => a ? (a.slice(0, 6) + '...' + a.slice(-4)) : '';
   const mapConnections = useMemo(() => [
-    ...prosumers.map((row) => ({ ...row, status: row.atRisk ? 'Fraud Risk' : 'Healthy', riskReason: row.atRisk ? `No meter reading inside the ${INACTIVITY_WINDOW_DAYS}-day window or trust below threshold` : 'Generation matches the expected operating profile', meterId: row.meterId || 'SIM-METER', feeder: row.feeder || 'LOCAL-FEED', lastKwh: row.lastKwh || 0, expectedKwh: row.expectedKwh || Math.round(Number(row.capacityKw) * 5) })),
+    ...prosumers.map((row) => {
+      const connection = { ...row, status: row.atRisk ? 'Fraud Risk' : 'Healthy', meterId: row.meterId || 'SIM-METER', feeder: row.feeder || 'LOCAL-FEED', lastKwh: row.lastKwh || 0, expectedKwh: row.expectedKwh || Math.round(Number(row.capacityKw) * 5) };
+      return { ...connection, riskReason: row.atRisk ? getRiskReason(connection) : 'Generation matches the expected operating profile' };
+    }),
     ...pendingList.map((row) => ({ ...row, status: 'Waiting', riskReason: 'Awaiting government registration approval', trustScore: null, meterId: 'Pending meter', feeder: 'Pending feeder', lastKwh: 0, expectedKwh: 0 })),
   ], [prosumers, pendingList]);
 
@@ -172,10 +194,15 @@ export default function GovtDashboard() {
 function IndiaConnectionMap({ connections, selectedId, zoomed, onSelect }) {
   const [hoveredStateId, setHoveredStateId] = useState(null);
   const [hoveredConnectionId, setHoveredConnectionId] = useState(null);
+  const cityCounts = {};
   const positioned = connections.map((connection, index) => {
     const city = Object.keys(CITY_POSITIONS).find((name) => connection.location?.includes(name));
     const stateCode = connection.location?.split(',').pop()?.trim() || 'MP';
-    return { ...connection, stateCode, point: CITY_POSITIONS[city] || { x: 285 + ((index * 43) % 90), y: 330 + ((index * 47) % 130) } };
+    const duplicateIndex = city ? (cityCounts[city] || 0) : 0;
+    if (city) cityCounts[city] = duplicateIndex + 1;
+    const basePoint = CITY_POSITIONS[city] || { x: 285 + ((index * 43) % 90), y: 330 + ((index * 47) % 130) };
+    const offset = duplicateIndex ? { x: duplicateIndex * 5, y: duplicateIndex * -5 } : { x: 0, y: 0 };
+    return { ...connection, stateCode, city, point: { x: basePoint.x + offset.x, y: basePoint.y + offset.y } };
   });
   const selected = positioned.find((row) => row.address === selectedId) || positioned[0];
   const hovered = positioned.find((row) => row.address === hoveredConnectionId);
@@ -187,6 +214,7 @@ function IndiaConnectionMap({ connections, selectedId, zoomed, onSelect }) {
   }, {});
   const hoveredState = hoveredStateId ? stateStats[hoveredStateId] : null;
   const detail = hovered || selected;
+  const showStateDetail = hoveredState && !hovered;
 
   return (
     <section className="govt-map-panel" aria-label="India state connection map">
@@ -199,15 +227,16 @@ function IndiaConnectionMap({ connections, selectedId, zoomed, onSelect }) {
           <g className="india-states">
             {indiaMap.locations.map((state) => {
               const summary = stateStats[state.id];
-              const stateTone = summary?.risk ? 'risk' : summary?.waiting ? 'waiting' : summary?.active ? 'healthy' : 'neutral';
+              const hasMixedStatuses = [summary?.active, summary?.waiting, summary?.risk].filter(Boolean).length > 1;
+              const stateTone = hasMixedStatuses ? 'mixed' : summary?.risk ? 'risk' : summary?.waiting ? 'waiting' : summary?.active ? 'healthy' : 'neutral';
               return <path key={state.id} className={'india-state ' + stateTone + (hoveredStateId === state.id ? ' hovered' : '')} d={state.path} tabIndex="0" aria-label={`${state.name}: ${summary?.rows.length || 0} connections`} onMouseEnter={() => setHoveredStateId(state.id)} onMouseLeave={() => setHoveredStateId(null)} onFocus={() => setHoveredStateId(state.id)} onBlur={() => setHoveredStateId(null)}><title>{state.name}</title></path>;
             })}
           </g>
           {positioned.map((row) => <g key={row.address} className={'map-connection ' + (row.address === selectedId ? 'selected' : '')} onMouseEnter={() => setHoveredConnectionId(row.address)} onMouseLeave={() => setHoveredConnectionId(null)}><circle className={'map-pulse ' + toneFor(row)} cx={row.point.x} cy={row.point.y} r={row.address === selectedId ? 21 : 15} /><circle className={'map-marker ' + toneFor(row)} cx={row.point.x} cy={row.point.y} r={row.address === selectedId ? 9 : 7} role="button" tabIndex="0" aria-label={`${row.subsidyID}, ${row.location}, ${row.status}`} onClick={() => onSelect(row)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') onSelect(row); }} /></g>)}
           {selected && <g className="map-callout" transform={`translate(${Math.min(selected.point.x + 15, 455)} ${Math.max(selected.point.y - 55, 12)})`}><rect width="140" height="46" rx="6" /><text x="10" y="18">{selected.location}</text><text className={toneFor(selected) === 'risk' ? 'callout-risk' : ''} x="10" y="35">{selected.status}</text></g>}
         </svg>
-        <div className={'map-detail ' + (hoveredState ? 'state-detail' : '') + (detail && toneFor(detail) === 'risk' ? ' risk' : '')}>
-          {hoveredState ? <><span className="map-detail-kicker">State block</span><strong>{hoveredState.name}</strong><span>{hoveredState.rows.length} monitored connection{hoveredState.rows.length === 1 ? '' : 's'}</span><div className="state-counts"><b className="healthy-text">{hoveredState.active} active</b><b className="waiting-text">{hoveredState.waiting} waiting</b><b className="risk-text">{hoveredState.risk} at risk</b></div><em>{hoveredState.rows.length ? 'Hover a city marker for connection telemetry.' : 'No live connection data in this state yet.'}</em></> : detail ? <><span className="map-detail-kicker">{hovered ? 'Connection telemetry' : 'Selected connection'}</span><strong>{detail.subsidyID}</strong><span>{detail.location} · {detail.meterId} · {detail.feeder}</span><span>{detail.lastKwh} kWh observed / {detail.expectedKwh} kWh expected · Trust {detail.trustScore ?? 'Pending'}/100</span><em>{detail.status === 'Fraud Risk' ? detail.riskReason : detail.status === 'Waiting' ? detail.riskReason : 'Generation and feeder telemetry are within the expected operating range.'}</em></> : <em>Select a city marker to inspect its telemetry.</em>}
+        <div className={'map-detail ' + (showStateDetail ? 'state-detail' : '') + (detail && toneFor(detail) === 'risk' ? ' risk' : '')}>
+          {showStateDetail ? <><span className="map-detail-kicker">State block</span><strong>{hoveredState.name}</strong><span>{hoveredState.rows.length} monitored connection{hoveredState.rows.length === 1 ? '' : 's'}</span><div className="state-counts"><b className="healthy-text">{hoveredState.active} active</b><b className="waiting-text">{hoveredState.waiting} waiting</b><b className="risk-text">{hoveredState.risk} at risk</b></div>{hoveredState.risk > 0 && <div className="state-risk-list">{hoveredState.rows.filter((row) => toneFor(row) === 'risk').map((row) => <strong key={row.address}>{row.location}: {row.riskReason}</strong>)}</div>}<em>{hoveredState.rows.length ? 'Hover a city marker for connection telemetry.' : 'No live connection data in this state yet.'}</em></> : detail ? <><span className="map-detail-kicker">{hovered ? 'Connection telemetry' : 'Selected connection'}</span><strong>{detail.subsidyID}</strong><span>{detail.location} · {detail.meterId} · {detail.feeder}</span><span>{detail.lastKwh} kWh observed / {detail.expectedKwh} kWh expected · Trust {detail.trustScore ?? 'Pending'}/100</span><em>{detail.status === 'Fraud Risk' ? detail.riskReason : detail.status === 'Waiting' ? detail.riskReason : 'Generation and feeder telemetry are within the expected operating range.'}</em></> : <em>Select a city marker to inspect its telemetry.</em>}
         </div>
       </div>
     </section>
