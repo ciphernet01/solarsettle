@@ -7,23 +7,20 @@ import './LoginPage.css';
 const ROLES = [
   {
     key: 'government',
-    icon: '🏛️',
     name: 'Government / DISCOM',
-    desc: 'Approve prosumer registrations, monitor generation data, flag fraud.',
+    desc: 'Approve registrations, monitor meter risk, and enforce penalties.',
     color: 'linear-gradient(135deg, #0f172a, #1e3a5f)',
   },
   {
     key: 'prosumer',
-    icon: '🌞',
     name: 'Prosumer',
-    desc: 'Log energy readings, build trust score, list surplus energy for sale.',
+    desc: 'Register panels, log verified readings, and list surplus energy.',
     color: 'linear-gradient(135deg, #b45309, #f59e0b)',
   },
   {
     key: 'buyer',
-    icon: '⚡',
     name: 'Buyer',
-    desc: 'Browse the marketplace, buy energy, settle instantly on-chain.',
+    desc: 'Browse the marketplace and settle purchases through MetaMask.',
     color: 'linear-gradient(135deg, #16a34a, #12833d)',
   },
 ];
@@ -32,7 +29,6 @@ export default function LoginPage() {
   const { selectedRole, loginAs } = useWeb3();
   const navigate = useNavigate();
 
-  // If already logged in, go to the right dashboard.
   React.useEffect(() => {
     if (selectedRole && ROLE_HOME[selectedRole]) {
       navigate(ROLE_HOME[selectedRole], { replace: true });
@@ -49,11 +45,11 @@ export default function LoginPage() {
       <Navbar links={[]} />
       <div className="login-wrap">
         <div className="login-card">
-          <div className="login-sun">☀️</div>
+          <div className="login-sun">SS</div>
           <h2>Sign in to SolarSettle</h2>
-          <p className="login-sub">Choose your role. Connect MetaMask later from inside the dashboard.</p>
+          <p className="login-sub">Choose the operating role. MetaMask connects inside each dashboard when a blockchain action is needed.</p>
 
-          <div role-grid>
+          <div className="role-grid">
             {ROLES.map((r) => (
               <button
                 key={r.key}
@@ -61,7 +57,6 @@ export default function LoginPage() {
                 style={{ background: r.color }}
                 onClick={() => handleSelect(r.key)}
               >
-                <span className="role-card-icon">{r.icon}</span>
                 <span className="role-card-name">{r.name}</span>
                 <span className="role-card-desc">{r.desc}</span>
               </button>

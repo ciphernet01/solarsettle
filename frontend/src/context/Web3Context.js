@@ -4,22 +4,28 @@ import abiJson from '../SolarSettleABI.json';
 import { CONTRACT_ADDRESS, CONTRACT_CHAIN_ID, getChain, isContractConfigured } from '../config';
 
 const CONTRACT_ABI = abiJson.abi;
+const ROLE_STORAGE_KEY = 'solarsettle.role';
 
 const Web3Context = createContext(null);
 export const useWeb3 = () => useContext(Web3Context);
 
-/** Route for each role. */
 export const ROLE_HOME = {
   government: '/govt',
   prosumer: '/prosumer',
   buyer: '/buyer',
 };
 
-export function Web3Provider({ children }) {
-  // Role selected at login - drives routing & which dashboard to show.
-  const [selectedRole, setSelectedRole] = useState(null);
+const initialRole = () => {
+  try {
+    const stored = window.localStorage.getItem(ROLE_STORAGE_KEY);
+    return ROLE_HOME[stored] ? stored : null;
+  } catch {
+    return null;
+  }
+};
 
-  // Wallet state - connecting MetaMask is optional and happens AFTER login.
+export function Web3Provider({ children }) {
+  const [selectedRole, setSelectedRole] = useState(initialRole);
   const [account, setAccount] = useState(null);
   const [contract, setContract] = useState(null);
   const [readProvider, setReadProvider] = useState(null);
@@ -27,10 +33,12 @@ export function Web3Provider({ children }) {
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState('');
   const configured = isContractConfigured();
+  const walletAvailable = typeof window !== 'undefined' && !!window.ethereum;
 
-  const switchNetwork = async (provider) => {
+  const switchNetwork = async () => {
     const chain = getChain(CONTRACT_CHAIN_ID);
     if (!chain) throw new Error('No chain metadata for chainId ' + CONTRACT_CHAIN_ID);
+
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
@@ -54,14 +62,39 @@ export function Web3Provider({ children }) {
     }
   };
 
-  /** Simple role-select login - no wallet needed. */
+  const bindWallet = useCallback(async (requestedAccounts) => {
+    if (!walletAvailable || !configured || !requestedAccounts?.length) return null;
+
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const net = await provider.getNetwork();
+    if (Number(net.chainId) !== CONTRACT_CHAIN_ID) {
+      await switchNetwork();
+    }
+
+    const refreshedProvider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await refreshedProvider.getSigner();
+    const signerAddress = await signer.getAddress();
+    const instance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    const finalNet = await refreshedProvider.getNetwork();
+
+    setAccount(signerAddress);
+    setContract(instance);
+    setReadProvider(refreshedProvider);
+    setChainId(Number(finalNet.chainId));
+    return { address: signerAddress };
+  }, [configured, walletAvailable]);
+
   const loginAs = useCallback((role) => {
     setSelectedRole(role);
+    try {
+      window.localStorage.setItem(ROLE_STORAGE_KEY, role);
+    } catch {
+      // localStorage can be unavailable in privacy modes; in-memory role still works.
+    }
   }, []);
 
-  /** Optional wallet connect - call this from inside a dashboard. */
   const connectWallet = useCallback(async () => {
-    if (!window.ethereum) {
+    if (!walletAvailable) {
       setError('MetaMask is not installed.');
       return null;
     }
@@ -69,31 +102,19 @@ export function Web3Provider({ children }) {
       setError('Contract not deployed yet. Run `npm run deploy:local` first.');
       return null;
     }
+
     setConnecting(true);
     setError('');
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const net = await provider.getNetwork();
-      if (Number(net.chainId) !== CONTRACT_CHAIN_ID) {
-        await switchNetwork(provider);
-      }
-      const accounts = await provider.send('eth_requestAccounts', []);
-      const signer = await provider.getSigner();
-      const instance = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-      const finalNet = await provider.getNetwork();
-
-      setAccount(accounts[0]);
-      setContract(instance);
-      setReadProvider(provider);
-      setChainId(Number(finalNet.chainId));
-      setConnecting(false);
-      return { address: accounts[0] };
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      return await bindWallet(accounts);
     } catch (e) {
       setError(e.code === 4001 ? 'Connection rejected in MetaMask.' : 'Connect failed: ' + (e.shortMessage || e.message));
-      setConnecting(false);
       return null;
+    } finally {
+      setConnecting(false);
     }
-  }, [configured]);
+  }, [bindWallet, configured, walletAvailable]);
 
   const logout = useCallback(() => {
     setSelectedRole(null);
@@ -102,19 +123,53 @@ export function Web3Provider({ children }) {
     setReadProvider(null);
     setChainId(null);
     setError('');
+    try {
+      window.localStorage.removeItem(ROLE_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures; logout still clears React state.
+    }
   }, []);
 
   useEffect(() => {
-    if (!window.ethereum) return undefined;
+    if (!walletAvailable || !configured) return undefined;
+    let mounted = true;
+
+    window.ethereum.request({ method: 'eth_accounts' })
+      .then((accounts) => {
+        if (mounted && accounts?.length) bindWallet(accounts).catch(() => {});
+      })
+      .catch(() => {});
+
+    return () => { mounted = false; };
+  }, [bindWallet, configured, walletAvailable]);
+
+  useEffect(() => {
+    if (!walletAvailable) return undefined;
+
     const onAccountsChanged = (accounts) => {
       if (!accounts || accounts.length === 0) {
         setAccount(null);
         setContract(null);
+        return;
       }
+      bindWallet(accounts).catch((e) => setError('Wallet refresh failed: ' + (e.shortMessage || e.message)));
     };
+
+    const onChainChanged = () => {
+      setAccount(null);
+      setContract(null);
+      setReadProvider(null);
+      setChainId(null);
+      setError('Network changed. Reconnect MetaMask to continue.');
+    };
+
     window.ethereum.on?.('accountsChanged', onAccountsChanged);
-    return () => window.ethereum.removeListener?.('accountsChanged', onAccountsChanged);
-  }, []);
+    window.ethereum.on?.('chainChanged', onChainChanged);
+    return () => {
+      window.ethereum.removeListener?.('accountsChanged', onAccountsChanged);
+      window.ethereum.removeListener?.('chainChanged', onChainChanged);
+    };
+  }, [bindWallet, walletAvailable]);
 
   const isWalletConnected = !!account;
   const chain = getChain(chainId || CONTRACT_CHAIN_ID);
@@ -132,6 +187,7 @@ export function Web3Provider({ children }) {
     connecting,
     error,
     configured,
+    walletAvailable,
     setError,
     connectWallet,
     contractAbi: CONTRACT_ABI,
